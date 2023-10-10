@@ -1,0 +1,5 @@
+venv/
+.venv/
+.idea/
+API-INFORMATION.xlsx
+~$API-INFORMATION.xlsx
