@@ -7,7 +7,7 @@ Email: hoangha0612.work@gmail.com
 from typing import Optional, Text, List
 from pydantic import BaseModel, EmailStr
 from pydantic.types import conint
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 
@@ -15,18 +15,24 @@ from decimal import Decimal
 class Register(BaseModel):
     email: EmailStr
     password: str
-    name: str
+    lname: str
+    fname: str
+    birt_date: date
 
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    name: str
-    role: int
+    lname: str
+    fname: str
+    birt_date: date
+    role: bool
 
 
 class EditProfile(BaseModel):
-    name: str
+    lname: str
+    fname: str
+    birt_date: date
 
 
 class EditPassword(BaseModel):
@@ -35,7 +41,9 @@ class EditPassword(BaseModel):
 
 class ProfileOut(BaseModel):
     email: str
-    name: str
+    lname: str
+    fname: str
+    birt_date: date
     created_at: datetime
 
     class Config:
@@ -43,12 +51,15 @@ class ProfileOut(BaseModel):
 
 
 class UserOut(BaseModel):
-    id: int
+    user_id: int
     email: EmailStr
-    name: str
+    lname: str
+    fname: str
+    birt_date: date
     role: int
+    verified: bool
+    status: bool
     created_at: datetime
-    status: int
 
     class Config:
         orm_mode = True

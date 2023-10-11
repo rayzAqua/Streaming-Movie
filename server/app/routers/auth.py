@@ -66,10 +66,10 @@ async def login(
     else:
         role = "CUSTOMER"
     access_token = oauth2.create_access_token(
-        data={"user_id": str(user.id), "role": role, "status": str(user.status)}
+        data={"user_id": str(user.user_id), "role": role, "status": str(user.status)}
     )
     userOut = {
-        "name": user.name,
+        "name": user.lname + user.fname,
         "role": role,
         "status": user.status,
     }
