@@ -67,7 +67,7 @@ class Film(Base):
 
     genres = relationship("Film_Genre", back_populates="film")
     actors = relationship("Film_Actor", back_populates="film")
-    age_limit = relationship("Age_Limit", back_populates="film")
+    agelimit = relationship("Age_Limit", back_populates="film")
     subcription = relationship("Subcription", back_populates="film")
     favorite = relationship("Favorite_Film", back_populates="film")
     rating = relationship("Rating_Film", back_populates="film")
@@ -100,7 +100,7 @@ class Age_Limit(Base):
     agelimit_id = Column(Integer, primary_key=True, nullable=False)
     age = Column(Integer, nullable=False)
 
-    film = relationship("Film", back_populates="age_limit")
+    film = relationship("Film", back_populates="agelimit")
 
 
 # Table actor in film/serie
@@ -116,21 +116,6 @@ class Film_Actor(Base):
 
     actor = relationship("Actor", back_populates="films")
     film = relationship("Film", back_populates="actors")
-
-
-# Table genre of film
-class Film_Genre(Base):
-    __tablename__ = "film_genre"
-    fg_id = Column(Integer, primary_key=True, nullable=False)
-    film_id = Column(
-        Integer, ForeignKey("film.film_id", ondelete="CASCADE"), nullable=False
-    )
-    genre_id = Column(
-        Integer, ForeignKey("genre.genre_id", ondelete="CASCADE"), nullable=False
-    )
-
-    film = relationship("Film", back_populates="genres")
-    genre = relationship("Genre", back_populates="films")
 
 
 class Subcription_Package(Base):
@@ -162,7 +147,7 @@ class Subcription(Base):
         Integer, ForeignKey("film.film_id", ondelete="CASCADE"), nullable=True
     )
     status = Column(
-        Integer, nullable=False, server_default="False"
+        Boolean, nullable=False, server_default="False"
     )  # True: Thanh toán thành công, False: Chưa thanh toán
     start_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
@@ -172,6 +157,21 @@ class Subcription(Base):
     user_subcription = relationship("User", back_populates="subcription")
     film = relationship("Film", back_populates="subcription")
     package = relationship("Subcription_Package", back_populates="subcription")
+
+
+# Table genre of film
+class Film_Genre(Base):
+    __tablename__ = "film_genre"
+    fg_id = Column(Integer, primary_key=True, nullable=False)
+    film_id = Column(
+        Integer, ForeignKey("film.film_id", ondelete="CASCADE"), nullable=False
+    )
+    genre_id = Column(
+        Integer, ForeignKey("genre.genre_id", ondelete="CASCADE"), nullable=False
+    )
+
+    film = relationship("Film", back_populates="genres")
+    genre = relationship("Genre", back_populates="films")
 
 
 # Table Favorite film/serie
@@ -271,10 +271,6 @@ class Film_Price(Base):
 
     price_list = relationship("Price_List", back_populates="film")
     film = relationship("Film", back_populates="price")
-
-
-# class Favorite_Genre(Base):
-#     None
 
 
 class Token(Base):
