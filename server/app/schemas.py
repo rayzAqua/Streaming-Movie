@@ -1,13 +1,13 @@
 """
 Create Schemas
-Author: jinnguyen0612
+Author: Team 12
 Email: hoangha0612.work@gmail.com
 """
 
 from typing import Optional, Text, List
 from pydantic import BaseModel, EmailStr
 from pydantic.types import conint
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 
@@ -15,27 +15,44 @@ from decimal import Decimal
 class Register(BaseModel):
     email: EmailStr
     password: str
-    name: str
+    lname: str
+    fname: str
+    birth_date: Optional[date]
+
+
+class Token(BaseModel):
+    user_id: int
+    token: str
+
+
+class ResendEmail(BaseModel):
+    email: EmailStr
 
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    name: str
-    role: int
+    lname: str
+    fname: str
+    birth_date: Optional[date]
 
 
 class EditProfile(BaseModel):
-    name: str
+    lname: str
+    fname: str
+    birth_date: date
 
 
 class EditPassword(BaseModel):
     password: str
 
 
+# Output for profile
 class ProfileOut(BaseModel):
     email: str
-    name: str
+    lname: str
+    fname: str
+    birth_date: date
     created_at: datetime
 
     class Config:
@@ -43,37 +60,30 @@ class ProfileOut(BaseModel):
 
 
 class UserOut(BaseModel):
-    id: int
+    user_id: int
     email: EmailStr
-    name: str
+    lname: str
+    fname: str
+    birth_date: date
     role: int
+    verified: bool
+    status: bool
     created_at: datetime
-    status: int
 
     class Config:
         orm_mode = True
 
 
-# token
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    id: Optional[str] = None
-
-
 # genre
 class Genre(BaseModel):
-    name: str
+    genre_name: str
 
 
 class GenreOut(Genre):
-    id: int
+    genre_id: int
 
 
-# film
+# Film
 class FilmBase(BaseModel):
     title: str
     length: int
@@ -81,22 +91,22 @@ class FilmBase(BaseModel):
     production_year: int
     path: str
     description: Text
-    price: int
-    genre_id: int
-    status: bool
-
-
-class FilmStatus(BaseModel):
+    agelimit_id: int
     status: bool
 
 
 class FilmDetailOut(FilmBase):
-    id: int
-    genre: GenreOut
-    add_at: datetime
+    film_id: int
+    created_at: datetime
 
     class Config:
         orm_mode = True
+
+
+# Genre of Movie
+class FilmGenre(BaseModel):
+    film_id: int
+    genre_id: int
 
 
 class Actor(BaseModel):
