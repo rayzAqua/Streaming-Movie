@@ -4,12 +4,14 @@ Author: jinnguyen0612
 Email: hoangha0612.work@gmail.com
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from . import models
 from .database import engine
 from .routers import user, auth, films, upload, genres, actors, pricing, payment
 from .config import settings
 from fastapi.middleware.cors import CORSMiddleware
+from .utils import UnicornException
 
 app = FastAPI(title="MOVIE STREAMING API")
 
@@ -41,3 +43,12 @@ app.include_router(upload.router)
 @app.get("/")
 def root():
     return {"message": "Welcome to my API server"}
+
+
+# Handle Error
+@app.exception_handler(UnicornException)
+async def unicorn_exception_handler(request: Request, exc: UnicornException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": exc.success, "detail": exc.detail},
+    )

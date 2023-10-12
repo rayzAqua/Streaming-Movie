@@ -1,6 +1,6 @@
 """
 Create table PostgreSQL
-Author: jinnguyen0612
+Author: Team 12
 Email: hoangha0612.work@gmail.com
 """
 
@@ -12,13 +12,6 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 from .database import Base
 
 
-# Table Role
-class Role(Base):
-    __tablename__ = "role"
-    role_id = Column(Integer, primary_key=True, nullable=False)
-    role_name = Column(String, nullable=False)
-
-
 # Table User
 class User(Base):
     __tablename__ = "user"
@@ -28,9 +21,9 @@ class User(Base):
     lname = Column(String, nullable=False)
     fname = Column(String, nullable=False)
     birth_date = Column(Date)  # Đặt kiểu dữ liệu là Date
-    role = Column(
-        Integer, ForeignKey("role.role_id", ondelete="CASCADE"), nullable=False
-    )
+    isAdmin = Column(
+        Boolean, nullable=False, server_default="False"
+    )  # True: Admin, False: Customer
     verified = Column(Boolean, nullable=False, server_default="False")
     status = Column(
         Boolean, nullable=False, server_default="True"
@@ -72,6 +65,7 @@ class Film(Base):
     favorite = relationship("Favorite_Film", back_populates="film")
     rating = relationship("Rating_Film", back_populates="film")
     history = relationship("History", back_populates="film")
+    price = relationship("Film_Price", back_populates="film")
 
 
 # Table for genre
@@ -122,13 +116,13 @@ class Subcription_Package(Base):
     __tablename__ = "subcription_package"
     package_id = Column(Integer, primary_key=True, nullable=False)
     package_name = Column(String, nullable=False)
-    price = Column(Numeric, nullable=False)
     duration = Column(Numeric, nullable=False)
     status = Column(
         Boolean, nullable=False, server_default="True"
     )  # True: kich hoat, False: vo hieu hoa
 
     subcription = relationship("Subcription", back_populates="package")
+    price = relationship("Package_Price", back_populates="package")
 
 
 # Payment of a user

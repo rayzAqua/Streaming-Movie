@@ -1,6 +1,6 @@
 """
 Create Schemas
-Author: jinnguyen0612
+Author: Team 12
 Email: hoangha0612.work@gmail.com
 """
 
@@ -17,7 +17,16 @@ class Register(BaseModel):
     password: str
     lname: str
     fname: str
-    birt_date: date
+    birth_date: Optional[date]
+
+
+class Token(BaseModel):
+    user_id: int
+    token: str
+
+
+class ResendEmail(BaseModel):
+    email: EmailStr
 
 
 class UserCreate(BaseModel):
@@ -25,25 +34,25 @@ class UserCreate(BaseModel):
     password: str
     lname: str
     fname: str
-    birt_date: date
-    role: bool
+    birth_date: Optional[date]
 
 
 class EditProfile(BaseModel):
     lname: str
     fname: str
-    birt_date: date
+    birth_date: date
 
 
 class EditPassword(BaseModel):
     password: str
 
 
+# Output for profile
 class ProfileOut(BaseModel):
     email: str
     lname: str
     fname: str
-    birt_date: date
+    birth_date: date
     created_at: datetime
 
     class Config:
@@ -55,7 +64,7 @@ class UserOut(BaseModel):
     email: EmailStr
     lname: str
     fname: str
-    birt_date: date
+    birth_date: date
     role: int
     verified: bool
     status: bool
@@ -65,26 +74,16 @@ class UserOut(BaseModel):
         orm_mode = True
 
 
-# token
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    id: Optional[str] = None
-
-
 # genre
 class Genre(BaseModel):
-    name: str
+    genre_name: str
 
 
 class GenreOut(Genre):
-    id: int
+    genre_id: int
 
 
-# film
+# Film
 class FilmBase(BaseModel):
     title: str
     length: int
@@ -92,22 +91,22 @@ class FilmBase(BaseModel):
     production_year: int
     path: str
     description: Text
-    price: int
-    genre_id: int
-    status: bool
-
-
-class FilmStatus(BaseModel):
+    agelimit_id: int
     status: bool
 
 
 class FilmDetailOut(FilmBase):
-    id: int
-    genre: GenreOut
-    add_at: datetime
+    film_id: int
+    created_at: datetime
 
     class Config:
         orm_mode = True
+
+
+# Genre of Movie
+class FilmGenre(BaseModel):
+    film_id: int
+    genre_id: int
 
 
 class Actor(BaseModel):
