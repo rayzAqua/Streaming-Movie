@@ -4,7 +4,7 @@ Author: Team 12
 Email: hoangha0612.work@gmail.com
 """
 
-from typing import Optional, Text, List
+from typing import Dict, Optional, Text, List
 from pydantic import BaseModel, EmailStr
 from pydantic.types import conint
 from datetime import date, datetime
@@ -23,6 +23,10 @@ class Register(BaseModel):
 class Token(BaseModel):
     user_id: int
     token: str
+
+
+class AccessTokenData(BaseModel):
+    user_id: int
 
 
 class ResendEmail(BaseModel):
@@ -64,8 +68,8 @@ class UserOut(BaseModel):
     email: EmailStr
     lname: str
     fname: str
-    birth_date: date
-    role: int
+    birth_date: Optional[date]
+    isAdmin: bool
     verified: bool
     status: bool
     created_at: datetime

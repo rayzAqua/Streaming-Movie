@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    base_url: str
 
     # Thiết lập env_file là file .env để đọc thông tin cấu hình từ filw .env
     class Config:

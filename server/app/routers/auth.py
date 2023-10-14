@@ -1,13 +1,15 @@
 """
 Router Authorize
-Author: jinnguyen0612
+Author: Team 12
 Email: hoangha0612.work@gmail.com
 """
 
 import random
 from fastapi import APIRouter, Depends, status, HTTPException, Response
-from fastapi.responses import HTMLResponse
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic_settings import BaseSettings
@@ -15,7 +17,7 @@ from datetime import datetime, timedelta, date
 from .. import database, schemas, models, utils, oauth2
 from ..database import get_db
 from ..config import settings
-from ..utils import UnicornException
+from ..utils import UnicornException, sendVerifyEmail
 import secrets
 from jose import JWSError, jwt
 from jose.exceptions import ExpiredSignatureError
@@ -37,7 +39,6 @@ conf = ConnectionConfig(
     VALIDATE_CERTS=True,
 )
 
-users_db = {"email": "", "verify_code": ""}
 
 mail = FastMail(conf)
 
@@ -59,7 +60,8 @@ async def login(
         # Check user
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=f"Email does not exist."
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Email does not exist.",
             )
         # Check status
         if not user.status:
@@ -67,6 +69,26 @@ async def login(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Your account is currently inactive. Please contact support.",
             )
+        # Check verify
+        if not user.verified:
+            # send mail
+            token = (
+                db.query(models.Token)
+                .filter(models.Token.user_id == user.user_id)
+                .first()
+            )
+            if not token:
+                # Send verify email
+                await sendVerifyEmail(dbSession=db, userData=user)
+                return {
+                    "success": True,
+                    "msg": "An email was sent to you. Please check.",
+                }
+            else:
+                return {
+                    "success": True,
+                    "msg": "Your account was not verify. Please verify.",
+                }
         # Check password
         if not await utils.verify(user_credentials.password, user.password):
             raise HTTPException(
@@ -92,7 +114,7 @@ async def login(
         return {
             "token_type": "bearer",
             "access_token": access_token,
-            "status": True,
+            "success": True,
             "userInfo": userInfo,
             "expiresIn": expire,
         }
@@ -155,31 +177,7 @@ async def register(user: schemas.Register, db: Session = Depends(get_db)):
         db.flush()
 
         # XÁC THỰC EMAIL
-        # Tạo một chuỗi xác thực ngẫu nhiên và thêm vào db
-        verify_token = secrets.token_hex(32)
-        new_token = models.Token(user_id=new_user.user_id, token=verify_token)
-        db.add(new_token)
-
-        # Tạo một chuỗi xác thực kiểm tra xem có đúng là user này yêu cầu xác thực tài khoản
-        expire = datetime.utcnow() + timedelta(minutes=2)
-        data = {"user_id": new_user.user_id, "email": new_user.email, "exp": expire}
-        user_token = jwt.encode(data, settings.secret_key, settings.algorithm)
-
-        # Tạo url xác thực từ user_token và verify_token
-        url = f"http://localhost:8000/verify/{user_token}/{verify_token}"
-
-        # Gửi mail
-        html = f"<p>Here is your verify link: {url}</p>"
-        message = MessageSchema(
-            subject="Verify Email",
-            recipients=[new_user.email],
-            body=html,
-            subtype=MessageType.html,
-        )
-        await mail.send_message(message)
-
-        # Chính thức lưu vào csdl
-        db.commit()
+        await sendVerifyEmail(dbSession=db, userData=new_user)
 
         return {
             "success": True,
@@ -204,16 +202,18 @@ async def verify(
                 user_token, settings.secret_key, algorithms=settings.algorithm
             )
         except ExpiredSignatureError:
-            # JWT hết hạn
+            # Nếu JWT đã hết hẹn thì truy vấn đến verify token trong db.
+            # Mục đích: Mỗi verify link chỉ đc mở form resend-email một lần duy nhất.
             on_delete_token = (
                 db.query(models.Token)
                 .filter(models.Token.token == verify_token)
                 .first()
             )
+            # Nếu truy vấn mà có tồn tại token thì xoá token cũ đi và gửi link tạo mới.
             if on_delete_token:
                 db.delete(on_delete_token)
-                db.commit()
-            html_content = """
+
+                html_content = """
                             <html>
                                 <head>
                                     <style>
@@ -289,7 +289,7 @@ async def verify(
                                             .then(response => response.json())
                                             .then(data => {
                                                 if (data.success === true) {
-                                                    responseMessage.textContent = `${data.detail}`;
+                                                    responseMessage.textContent = `${data.msg}`;
                                                 } else {
                                                     responseMessage.textContent = `Resend failed: ${data.detail}`;
                                                 }                                  
@@ -302,37 +302,47 @@ async def verify(
                                 </body>
                             </html>
                             """
-            return HTMLResponse(content=html_content)
+
+                db.commit()
+
+                return HTMLResponse(content=html_content)
+            # Nếu không tồn tại verify token thì link không hợp lệ.
+            else:
+                return HTMLResponse(content="""<h1>Invalid Link.</h1>""")
 
         # Kiểm tra user từ user_data
         user_query = db.query(models.User).filter(
-            models.User.user_id == user_data["user_id"]
-            and models.User.email == user_data["email"]
+            and_(
+                models.User.user_id == user_data["user_id"],
+                models.User.email == user_data["email"],
+            )
         )
 
         stored_user = user_query.first()
 
         if not stored_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Link"
-            )
+            return HTMLResponse(content="""<h1>Invalid User.</h1>""")
 
         # Kiểm tra token từ stored_user và verify_token
+        # Mục đích:
+        # - Nếu đúng token của user thì hợp lệ.
+        # - Nếu user_token chưa hết hạn mà đã xác thực mà vẫn cố truy cập vào thì Link không hợp lệ.
         isCorrectToken = (
             db.query(models.Token)
             .filter(
-                models.Token.user_id == stored_user.user_id
-                and models.Token.token == verify_token
+                and_(
+                    models.Token.user_id == stored_user.user_id,
+                    models.Token.token == verify_token,
+                )
             )
             .first()
         )
 
         if not isCorrectToken:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Link"
-            )
+            return HTMLResponse(content="""<h1>Invalid Link.</h1>""")
 
         stored_user.verified = True
+        # Sau khi xác thực xong thì xoá verify token trong db đi để Link không còn dùng đc nữa (thao tác truy vấn).
         db.delete(isCorrectToken)
         db.commit()
 
@@ -345,43 +355,33 @@ async def verify(
 
 
 @router.post("/resend-email")
-async def verify(
+async def resendEmail(
     email_data: schemas.ResendEmail,
     db: Session = Depends(get_db),
 ):
     try:
-        email = email_data.email
-
-        user = db.query(models.User).filter(models.User.email == email).first()
+        user = (
+            db.query(models.User).filter(models.User.email == email_data.email).first()
+        )
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Email isn't existed"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Email isn't existed."
+            )
+        if user.verified:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="User was verified."
             )
 
-        new_verify_token = secrets.token_hex(32)
-        new_token = models.Token(user_id=user.user_id, token=new_verify_token)
-        db.add(new_token)
-
-        # Tạo một chuỗi xác thực kiểm tra xem có đúng là user này yêu cầu xác thực tài khoản
-        expire = datetime.utcnow() + timedelta(minutes=2)
-        new_data = {"user_id": user.user_id, "email": user.email, "exp": expire}
-        new_user_token = jwt.encode(new_data, settings.secret_key, settings.algorithm)
-
-        # Tạo url xác thực từ user_token và verify_token
-        url = f"http://localhost:8000/verify/{new_user_token}/{new_verify_token}"
-
-        # Gửi mail
-        html = f"<p>Here is your verify link: {url}</p>"
-        message = MessageSchema(
-            subject="Verify Email",
-            recipients=[user.email],
-            body=html,
-            subtype=MessageType.html,
+        isExistedToken = (
+            db.query(models.Token).filter(models.Token.user_id == user.user_id).first()
         )
-        await mail.send_message(message)
+        if isExistedToken:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Email was sent."
+            )
 
-        # Chính thức lưu vào csdl
-        db.commit()
+        # Send verify email
+        await sendVerifyEmail(dbSession=db, userData=user)
 
         return {"success": True, "msg": "A link had sent to your email."}
 
