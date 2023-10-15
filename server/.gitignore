@@ -3,3 +3,5 @@ venv/
 .idea/
 API-INFORMATION.xlsx
 ~$API-INFORMATION.xlsx
+app/__pycache__/
+app/routers/__pycache__
