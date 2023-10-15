@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, date
 from .. import database, schemas, models, utils, oauth2
 from ..database import get_db
 from ..config import settings
-from ..utils import UnicornException, sendVerifyEmail
+from ..utils import UnicornException, sendConfirmCodeEmail, sendVerifyEmail
 import secrets
 from jose import JWSError, jwt
 from jose.exceptions import ExpiredSignatureError
@@ -384,6 +384,108 @@ async def resendEmail(
         await sendVerifyEmail(dbSession=db, userData=user)
 
         return {"success": True, "msg": "A link had sent to your email."}
+
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
+        )
+
+
+@router.post("/forget-password")
+async def forgetPassword(
+    email_user: schemas.ForgetPassword, db: Session = Depends(get_db)
+):
+    try:
+        user = (
+            db.query(models.User).filter(models.User.email == email_user.email).first()
+        )
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User is not existed."
+            )
+
+        # Kiểm tra xem user này đã có mã chưa.
+        if user.email in utils.confirmation_data.keys():
+            # Nếu đã có thì kiểm tra xem mã đã hết hạn chưa.
+            current_time = datetime.utcnow()
+            expiration_time = utils.confirmation_data[user.email]["expiration_time"]
+
+            # Nếu chưa hết hạn thì trả về dòng thông báo là email đã gửi.
+            if expiration_time and current_time <= expiration_time:
+                # Mã xác nhận chưa hết hạn, không gửi lại
+                return {
+                    "success": True,
+                    "msg": f"An email has already been sent to your address. Please check it and verify.",
+                }
+
+        # Nếu user chưa có mã thì gửi mã xác nhận email
+        await sendConfirmCodeEmail(user.email)
+
+        return {
+            "success": True,
+            "msg": f"An email has been sent to your address. Please check it and verify.",
+        }
+
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
+        )
+
+
+@router.post("/confirm-code")
+async def confirmCode(confirm_data: schemas.ConfirmCode, db: Session = Depends(get_db)):
+    try:
+        # Kiểm tra user
+        # Email sẽ được lấy từ localStorage
+        user = (
+            db.query(models.User)
+            .filter(models.User.email == confirm_data.email)
+            .first()
+        )
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User is not existed."
+            )
+
+        # Xác nhận
+        if user.email in utils.confirmation_data.keys():
+            # Kiểm tra mã xem có đúng không.
+            if utils.confirmation_data[user.email]["code"] == confirm_data.code:
+                # Nếu đúng thì kiểm tra thời hạn.
+                current_time = datetime.utcnow()
+                expiration_time = utils.confirmation_data[user.email]["expiration_time"]
+                # Nếu chưa hết hạn thì xác nhận thành công.
+                if expiration_time >= current_time:
+                    # Xoá dữ liệu đi.
+                    del utils.confirmation_data[user.email]
+                    return {
+                        "success": True,
+                        "isCorrect": True,
+                        "msg": f"Confirmation code is correct. Proceed to change password.",
+                    }
+                # Nếu hết hạn thì gửi lại email.
+                else:
+                    # Xoá dữ liệu cũ.
+                    del utils.confirmation_data[user.email]
+                    # Gửi mail mới.
+                    await sendConfirmCodeEmail(user.email)
+                    return {
+                        "success": False,
+                        "isCorrect": False,
+                        "msg": f"Code is expired. An email has been sent to your address. Please check it and verify.",
+                    }
+            # Nếu mã không đúng
+            else:
+                return {
+                    "success": False,
+                    "isCorrect": False,
+                    "msg": f"Invalid code.",
+                }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invalid user confirmation data.",
+            )
 
     except HTTPException as e:
         raise UnicornException(

@@ -46,13 +46,17 @@ class UnicornException(Exception):
         self.success = success
 
 
+def generate_expire_time():
+    return datetime.utcnow() + timedelta(minutes=2)
+
+
 async def sendVerifyEmail(dbSession, userData):
     new_verify_token = secrets.token_hex(32)
     new_token = models.Token(user_id=userData.user_id, token=new_verify_token)
     dbSession.add(new_token)
 
     # Tạo một chuỗi xác thực kiểm tra xem có đúng là user này yêu cầu xác thực tài khoản
-    expire = datetime.utcnow() + timedelta(minutes=2)
+    expire = generate_expire_time()
     new_data = {"user_id": userData.user_id, "email": userData.email, "exp": expire}
     new_user_token = jwt.encode(new_data, settings.secret_key, settings.algorithm)
 
@@ -71,3 +75,26 @@ async def sendVerifyEmail(dbSession, userData):
 
     # Chính thức lưu vào csdl
     dbSession.commit()
+
+
+confirmation_data = {}
+
+
+async def sendConfirmCodeEmail(email):
+    # Tạo mã xác nhận email
+    confirm_code = secrets.token_hex(3)
+    expire_time = generate_expire_time()
+
+    confirmation_data[email] = {
+        "code": confirm_code,
+        "expiration_time": expire_time,
+    }
+    # Gửi mail
+    html = f"<p>Here is your code: <span>{confirm_code}</span></p>"
+    message = MessageSchema(
+        subject="Confirm Your Email",
+        recipients=[email],
+        body=html,
+        subtype=MessageType.html,
+    )
+    await mail.send_message(message)
