@@ -4,7 +4,7 @@ Author: jinnguyen0612
 Email: hoangha0612.work@gmail.com
 """
 
-from jose import JWSError, jwt
+from jose import ExpiredSignatureError, JWSError, jwt
 from datetime import datetime, timedelta
 from . import schemas, database, models
 from fastapi import Depends, status, HTTPException
@@ -43,7 +43,7 @@ def verify_access_token(token: str, credentials_exception):
             raise credentials_exception
 
         token_data = schemas.AccessTokenData(user_id=user_id)
-    except JWSError:
+    except ExpiredSignatureError:
         raise credentials_exception
 
     return token_data

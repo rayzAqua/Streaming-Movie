@@ -51,6 +51,14 @@ class EditPassword(BaseModel):
     password: str
 
 
+class ForgetPassword(BaseModel):
+    email: EmailStr
+
+
+class ConfirmCode(ForgetPassword):
+    code: str
+
+
 # Output for profile
 class ProfileOut(BaseModel):
     email: str

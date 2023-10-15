@@ -1,6 +1,6 @@
 """
 Router actor
-Author: jinnguyen0612
+Author: Team 12
 Email: hoangha0612.work@gmail.com
 """
 
@@ -20,6 +20,7 @@ from typing import Optional, Text, List
 
 from ..database import get_db
 from .. import database, schemas, models, utils, oauth2
+
 
 router = APIRouter(prefix="/actors", tags=["Actors"])
 

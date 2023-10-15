@@ -19,7 +19,7 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 
 # POST
-@router.post("/create", status_code=status.HTTP_201_CREATED)
+@router.post("/ ", status_code=status.HTTP_201_CREATED)
 async def create_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
@@ -41,11 +41,11 @@ async def create_user(
                 detail="First Name is required.",
             )
         # Lenght of name valiđate
-        if len(user.lname) >= 12:
+        if len(user.lname) > 36:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Last Name is too long."
             )
-        if len(user.fname) >= 12:
+        if len(user.fname) > 12:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="First Name is too long.",
@@ -271,7 +271,7 @@ async def change_pass(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Password need to 6 characters.",
             )
-        hashed_password = utils.hash(edit_user.password)
+        hashed_password = await utils.hash(edit_user.password)
         edit_user.password = hashed_password
         user_query.update(edit_user.dict(), synchronize_session=False)  # type: ignore
         db.commit()
