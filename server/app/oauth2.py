@@ -4,7 +4,7 @@ Author: jinnguyen0612
 Email: hoangha0612.work@gmail.com
 """
 
-from jose import JWSError, jwt
+from jose import ExpiredSignatureError, JWSError, jwt
 from datetime import datetime, timedelta
 from . import schemas, database, models
 from fastapi import Depends, status, HTTPException
@@ -37,11 +37,13 @@ def create_access_token(data: dict):
 def verify_access_token(token: str, credentials_exception):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        id: str = payload.get("user_id")  # type: ignore
-        if id is None:
+
+        user_id: str = payload.get("user_id")  # type: ignore
+        if user_id is None:
             raise credentials_exception
-        token_data = schemas.TokenData(id=id)
-    except JWSError:
+
+        token_data = schemas.AccessTokenData(user_id=user_id)
+    except ExpiredSignatureError:
         raise credentials_exception
 
     return token_data
@@ -57,5 +59,5 @@ def get_current_user(
     )
 
     token = verify_access_token(token, credentials_exception)  # type: ignore
-    user = db.query(models.User).filter(models.User.id == token.id).first()  # type: ignore
+    user = db.query(models.User).filter(models.User.user_id == token.user_id).first()  # type: ignore
     return user
