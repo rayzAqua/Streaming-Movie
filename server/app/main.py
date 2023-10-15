@@ -1,6 +1,6 @@
 """
 Main
-Author: jinnguyen0612
+Author: Team 12
 Email: hoangha0612.work@gmail.com
 """
 
