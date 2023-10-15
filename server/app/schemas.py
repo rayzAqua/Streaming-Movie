@@ -42,9 +42,9 @@ class UserCreate(BaseModel):
 
 
 class EditProfile(BaseModel):
-    lname: str
-    fname: str
-    birth_date: date
+    lname: Optional[str]
+    fname: Optional[str]
+    birth_date: Optional[date]
 
 
 class EditPassword(BaseModel):
@@ -56,7 +56,7 @@ class ProfileOut(BaseModel):
     email: str
     lname: str
     fname: str
-    birth_date: date
+    birth_date: Optional[date]
     created_at: datetime
 
     class Config:

@@ -26,6 +26,11 @@ async def create_user(
     current_user: int = Depends(oauth2.get_current_user),
 ):
     try:
+        if len(user.password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password need to 6 characters.",
+            )
         if user.lname == "":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Last Name is required."
@@ -105,7 +110,7 @@ async def get_user(
 ):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
-        return {"success": False, "detail": "Not found."}
+        return {"success": False, "detail": "User does not exist."}
     user_data = {
         "user_id": user.user_id,
         "email": user.email,
@@ -145,28 +150,46 @@ async def get_all_customer(
     return {"success": True, "data": customer_data}
 
 
-@router.get("/getFavoriteMovie", response_model=List[schemas.UserFavoriteFilm])
+@router.get("/getFavoriteMovie")
 async def get_favorite_movie(
     db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
 ):
-    film = (
+    f_films = (
         db.query(models.Favorite_Film)
-        .filter(models.Favorite_Film.user_id == current_user.id)
+        .filter(models.Favorite_Film.user_id == current_user.user_id)
         .all()
     )
-    return film
+    if not f_films:
+        return {"success": False, "detail": []}
+
+    f_film_data = [
+        {
+            "film_id": f_film.film_id,
+        }
+        for f_film in f_films
+    ]
+    return {"success": True, "data": f_film_data}
 
 
-@router.get("/profile", response_model=schemas.ProfileOut)
+@router.get("/profile")
 async def get_profile(
     db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
 ):
-    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    user = (
+        db.query(models.User)
+        .filter(models.User.user_id == current_user.user_id)
+        .first()
+    )
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist"
-        )
-    return user
+        return {"success": False, "detail": "User does not exist."}
+    user_profile = {
+        "email": user.email,
+        "lname": user.lname,
+        "fname": user.fname,
+        "birth_date": user.birth_date,
+        "created_at": user.created_at,
+    }
+    return {"success": True, "data": user_profile}
 
 
 # END GET
@@ -179,18 +202,53 @@ async def update_profile(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    user_query = db.query(models.User).filter(models.User.id == current_user.id)
-    user = user_query.first()
-
-    if user == None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+    try:
+        user_query = db.query(models.User).filter(
+            models.User.user_id == current_user.user_id
         )
+        user = user_query.first()
 
-    user_query.update(edit_user.dict(), synchronize_session=False)  # type: ignore
-    db.commit()
+        if not user:
+            return {"success": False, "detail": "User does not exist."}
 
-    return {"msg": "Edit profile success"}
+        update_data = {}
+
+        if edit_user.lname is not None and edit_user.lname != "":
+            if len(edit_user.lname) > 12:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="LastName is too long.",
+                )
+            else:
+                update_data["lname"] = edit_user.lname
+
+        if edit_user.fname is not None and edit_user.fname != "":
+            if len(edit_user.fname) > 12:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="FirstName is too long.",
+                )
+            else:
+                update_data["fname"] = edit_user.fname
+
+        if edit_user.birth_date is not None:
+            if edit_user.birth_date >= date.today():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="BirthDate cannot greater than current day.",
+                )
+            else:
+                update_data["birth_date"] = edit_user.birth_date
+
+        if update_data:
+            user_query.update(update_data, synchronize_session=False)
+            db.commit()
+
+        return {"succes": True, "msg": "Edit profile success"}
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
+        )
 
 
 @router.put("/changePass")
@@ -199,20 +257,30 @@ async def change_pass(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    user_query = db.query(models.User).filter(models.User.id == current_user.id)
-    user = user_query.first()
-
-    if user == None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+    try:
+        user_query = db.query(models.User).filter(
+            models.User.user_id == current_user.user_id
         )
+        user = user_query.first()
 
-    hashed_password = utils.hash(edit_user.password)
-    edit_user.password = hashed_password
-    user_query.update(edit_user.dict(), synchronize_session=False)  # type: ignore
-    db.commit()
+        if not user:
+            return {"success": False, "detail": "User does not exist."}
 
-    return {"msg": "Change password success"}
+        if len(edit_user.password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password need to 6 characters.",
+            )
+        hashed_password = utils.hash(edit_user.password)
+        edit_user.password = hashed_password
+        user_query.update(edit_user.dict(), synchronize_session=False)  # type: ignore
+        db.commit()
+
+        return {"success": True, "msg": "Change password success"}
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
+        )
 
 
 # END PUT
