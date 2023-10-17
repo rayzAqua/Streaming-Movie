@@ -39,6 +39,12 @@ class ConfirmCode(EmailInput):
     code: str
 
 
+class ChangePassword(BaseModel):
+    isCorrect: bool
+    email: EmailStr
+    new_password: str
+
+
 class EditProfile(BaseModel):
     name: str
 

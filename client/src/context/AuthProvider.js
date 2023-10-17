@@ -1,11 +1,11 @@
 import axios from "../api/axios";
 import { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 export const AuthContext = createContext();
 
-export const AuthContextProvider = ({ children }) => { 
+export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     if (localStorage.getItem("tokens")) {
       let tokens = JSON.parse(localStorage.getItem("tokens"));
@@ -14,30 +14,47 @@ export const AuthContextProvider = ({ children }) => {
     return null;
   });
 
-  const navigate = useNavigate();
- 
   const login = async (payload) => {
-      const apiResponse = await axios.post(axios.defaults.baseURL + "/login", payload, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
+    try {
+      const apiResponse = await axios.post(
+        axios.defaults.baseURL + "/login",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
-      if (apiResponse.data.status === true && apiResponse.data.userInfo !=0) {
-        localStorage.setItem("tokens", JSON.stringify(apiResponse.data));
-        if(apiResponse.data.userInfo.status ==2) window.location.href = "/verify-code";
-        else if(apiResponse.data.userInfo.status==3) window.location.href = "/change-pass";
-        else window.location.href = "/"; 
+      if (apiResponse && apiResponse.data.success) {
+        localStorage.setItem("tokens", JSON.stringify(apiResponse.data.user));
+        toast.success("Login successfuly!");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+      } else {
+        toast.warning(apiResponse.data.msg);
       }
-
+    } catch (error) {
+      if (error.response && error.response.status === 403) {
+        toast.error(error.response.data.detail);
+      } else if (error.response && error.response.status === 422) {
+        toast.error(error.response.data.detail[0].ctx.reason);
+      } else if (error.response && error.response.status === 500) {
+        toast.error(error.response.data.detail);
+      } else {
+        toast.error("Something is wrong.");
+      }
+    }
   };
 
   const logout = async () => {
     setUser(null);
     localStorage.removeItem("tokens");
     localStorage.removeItem("payment");
-    // navigate("/login");
-    window.location.href = "/login";
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 2000);
   };
 
   return (
@@ -47,5 +64,4 @@ export const AuthContextProvider = ({ children }) => {
   );
 };
 
- 
 export default AuthContext;

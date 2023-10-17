@@ -1,5 +1,5 @@
 import axios from "../api/axios";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 const axiosApiInstance = axios.create({});
 
@@ -10,16 +10,16 @@ axiosApiInstance.interceptors.request.use((config) => {
     window.location.href = "/login";
   } else {
     const dateToCompare = new Date(tokensData.expiresIn); // Ngày cần so sánh
-    const today = new Date()
+    const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    if(today>=dateToCompare){
+    if (today >= dateToCompare) {
       toast.info("Vui lòng đăng nhập để tiếp tục!", { autoClose: 3000 });
       window.location.href = "/login";
-    }else{
+    } else {
       config.headers = {
-        'Authorization': `${tokensData.token_type} ${tokensData.access_token}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        Authorization: `${tokensData.token_type} ${tokensData.access_token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
       };
     }
   }
@@ -27,7 +27,7 @@ axiosApiInstance.interceptors.request.use((config) => {
 });
 
 axiosApiInstance.interceptors.response.use(
-  response => response,
+  (response) => response,
   async (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.clear();
