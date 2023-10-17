@@ -27,6 +27,7 @@ router = APIRouter(prefix="/payment", tags=["Payment"])
 
 
 # POST
+# New bug: user had a valid payment can register new ?
 @router.post("/forFilm/{film_id}", status_code=status.HTTP_201_CREATED)
 def add_payment_for_film(
     film_id: int,
