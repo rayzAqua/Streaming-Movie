@@ -1,7 +1,5 @@
 """
-Create table PostgreSQL
-Author: jinnguyen0612
-Email: hoangha0612.work@gmail.com
+    Create table PostgreSQL
 """
 
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Numeric

@@ -1,7 +1,5 @@
 """
-Main
-Author: Team 12
-Email: hoangha0612.work@gmail.com
+    Main
 """
 
 from fastapi import FastAPI, Request

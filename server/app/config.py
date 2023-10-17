@@ -1,11 +1,7 @@
 """
-Config const
-Author: jinnguyen0612
-Email: hoangha0612.work@gmail.com
+    Config const
 """
-"""
-    Định dạng dữ liệu cho các cài đặt kết nối, key và các thông tin khác.
-"""
+
 from pydantic_settings import BaseSettings
 
 

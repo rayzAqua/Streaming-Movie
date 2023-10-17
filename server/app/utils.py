@@ -1,7 +1,5 @@
 """
-Hash and verify password
-Author: Team 12
-Email: hoangha0612.work@gmail.com
+    Hash and verify password
 """
 
 from datetime import datetime, timedelta, date
