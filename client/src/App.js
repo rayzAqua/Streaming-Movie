@@ -32,10 +32,9 @@ import Package from "./pages/customer/Package";
 
 
 function App() {
-  Aos.init();
   const tokens = JSON.parse(localStorage.getItem('tokens'));
-  const permission = tokens ? jwtDecode(tokens.access_token).role : '';
-  
+  const permission = tokens ? jwtDecode(tokens.access_token).role : null;
+  Aos.init();
   return (
     <AuthContextProvider>
       <Routes>
