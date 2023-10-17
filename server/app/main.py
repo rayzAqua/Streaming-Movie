@@ -8,17 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from . import models
 from .database import engine
-from .routers import (
-    user,
-    auth,
-    films,
-    upload,
-    genres,
-    actors,
-    subcription_package,
-    priceList,
-    payment,
-)
+from .routers import user, auth, films, upload, genres, actors, pricing, payment
 from .config import settings
 from fastapi.middleware.cors import CORSMiddleware
 from .utils import UnicornException
@@ -40,12 +30,12 @@ app.add_middleware(
 
 models.Base.metadata.create_all(bind=engine)
 
+
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(films.router)
 app.include_router(genres.router)
-app.include_router(subcription_package.router)
-app.include_router(priceList.router)
+app.include_router(pricing.router)
 app.include_router(actors.router)
 app.include_router(payment.router)
 app.include_router(upload.router)

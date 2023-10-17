@@ -1,13 +1,13 @@
 """
 Create Schemas
-Author: Team 12
+Author: jinnguyen0612
 Email: hoangha0612.work@gmail.com
 """
 
-from typing import Dict, Optional, Text, List
+from typing import Optional, Text, List
 from pydantic import BaseModel, EmailStr
 from pydantic.types import conint
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 
 
@@ -15,9 +15,13 @@ from decimal import Decimal
 class Register(BaseModel):
     email: EmailStr
     password: str
-    lname: str
-    fname: str
-    birth_date: Optional[date]
+    name: str
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
 
 
 class Token(BaseModel):
@@ -29,42 +33,25 @@ class AccessTokenData(BaseModel):
     user_id: int
 
 
-class ResendEmail(BaseModel):
+class EmailInput(BaseModel):
     email: EmailStr
 
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    lname: str
-    fname: str
-    birth_date: Optional[date]
+class ConfirmCode(EmailInput):
+    code: str
 
 
 class EditProfile(BaseModel):
-    lname: Optional[str]
-    fname: Optional[str]
-    birth_date: Optional[date]
+    name: str
 
 
 class EditPassword(BaseModel):
     password: str
 
 
-class ForgetPassword(BaseModel):
-    email: EmailStr
-
-
-class ConfirmCode(ForgetPassword):
-    code: str
-
-
-# Output for profile
 class ProfileOut(BaseModel):
     email: str
-    lname: str
-    fname: str
-    birth_date: Optional[date]
+    name: str
     created_at: datetime
 
     class Config:
@@ -72,11 +59,9 @@ class ProfileOut(BaseModel):
 
 
 class UserOut(BaseModel):
-    user_id: int
+    id: int
     email: EmailStr
-    lname: str
-    fname: str
-    birth_date: Optional[date]
+    name: str
     isAdmin: bool
     verified: bool
     status: bool
@@ -88,14 +73,14 @@ class UserOut(BaseModel):
 
 # genre
 class Genre(BaseModel):
-    genre_name: str
+    name: str
 
 
 class GenreOut(Genre):
-    genre_id: int
+    id: int
 
 
-# Film
+# film
 class FilmBase(BaseModel):
     title: str
     length: int
@@ -103,22 +88,22 @@ class FilmBase(BaseModel):
     production_year: int
     path: str
     description: Text
-    agelimit_id: int
+    price: int
+    genre_id: int
+    status: bool
+
+
+class FilmStatus(BaseModel):
     status: bool
 
 
 class FilmDetailOut(FilmBase):
-    film_id: int
-    created_at: datetime
+    id: int
+    genre: GenreOut
+    add_at: datetime
 
     class Config:
         orm_mode = True
-
-
-# Genre of Movie
-class FilmGenre(BaseModel):
-    film_id: int
-    genre_id: int
 
 
 class Actor(BaseModel):
@@ -130,28 +115,14 @@ class ActorOut(Actor):
     id: int
 
 
-class Package(BaseModel):
-    package_name: str
-    duration: int
+class Pricing(BaseModel):
+    name: str
+    price: Decimal
+    days: Decimal
+    status: bool
 
 
-class Price(BaseModel):
-    price: float
-
-
-class PackagePrice(BaseModel):
-    price_id: int
-    start_at: datetime
-    end_at: datetime
-
-
-class EditPackagePrice(BaseModel):
-    price_id: Optional[int]
-    start_at: Optional[datetime]
-    end_at: Optional[datetime]
-
-
-class PackageOut(Package):
+class PricingOut(Pricing):
     id: int
 
 

@@ -1,25 +1,20 @@
 """
-Router Authorize
-Author: Team 12
-Email: hoangha0612.work@gmail.com
+    Router Authorize
 """
 
-import random
-from fastapi import APIRouter, Depends, status, HTTPException, Response
+from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-from pydantic_settings import BaseSettings
-from datetime import datetime, timedelta, date
+from fastapi_mail import FastMail, ConnectionConfig
+from datetime import datetime, timedelta
 from .. import database, schemas, models, utils, oauth2
 from ..database import get_db
 from ..config import settings
 from ..utils import UnicornException, sendConfirmCodeEmail, sendVerifyEmail
-import secrets
-from jose import JWSError, jwt
+from jose import jwt
 from jose.exceptions import ExpiredSignatureError
 
 
@@ -73,9 +68,7 @@ async def login(
         if not user.verified:
             # send mail
             token = (
-                db.query(models.Token)
-                .filter(models.Token.user_id == user.user_id)
-                .first()
+                db.query(models.Token).filter(models.Token.user_id == user.id).first()
             )
             if not token:
                 # Send verify email
@@ -103,10 +96,10 @@ async def login(
             role = "CUSTOMER"
         # Generate a access token
         access_token = oauth2.create_access_token(
-            data={"user_id": str(user.user_id), "role": role}
+            data={"user_id": str(user.id), "role": role}
         )
         userInfo = {
-            "name": user.lname + user.fname,
+            "name": user.name,
             "role": role,
         }
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -128,30 +121,16 @@ async def login(
 async def register(user: schemas.Register, db: Session = Depends(get_db)):
     try:
         # Empty name validate
-        if user.lname == "":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Last Name is required."
-            )
-        if user.fname == "":
+        if user.name == "":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="First Name is required.",
+                detail="Full Name is required.",
             )
         # Lenght of name valiđate
-        if len(user.lname) > 36:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Last Name is too long."
-            )
-        if len(user.fname) > 12:
+        if len(user.name) > 32:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="First Name is too long.",
-            )
-        # BirthDate valiđate
-        if user.birth_date != None and user.birth_date > date.today():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="BirthDate cannot be in the future.",
+                detail="Full Name is too long.",
             )
 
         check_user = (
@@ -165,10 +144,7 @@ async def register(user: schemas.Register, db: Session = Depends(get_db)):
         # Tạo một bản ghi User mới với trạng thái verify (status = 2)
         hashed_password = await utils.hash(user.password)
         new_user = models.User(
-            email=user.email,
-            password=hashed_password,
-            lname=user.lname,
-            fname=user.fname,
+            email=user.email, password=hashed_password, name=user.name
         )
 
         # Lưu thông tin người dùng vào cơ sở dữ liệu (sử dụng tham số db)
@@ -198,6 +174,11 @@ async def verify(
     try:
         # Giải mã JWT và lưu thông tin vào user_data
         try:
+            parts = user_token.split(".")
+            if len(parts) != 3:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Token."
+                )
             user_data = jwt.decode(
                 user_token, settings.secret_key, algorithms=settings.algorithm
             )
@@ -313,13 +294,11 @@ async def verify(
         # Kiểm tra user từ user_data
         user_query = db.query(models.User).filter(
             and_(
-                models.User.user_id == user_data["user_id"],
+                models.User.id == user_data["user_id"],
                 models.User.email == user_data["email"],
             )
         )
-
         stored_user = user_query.first()
-
         if not stored_user:
             return HTMLResponse(content="""<h1>Invalid User.</h1>""")
 
@@ -331,13 +310,12 @@ async def verify(
             db.query(models.Token)
             .filter(
                 and_(
-                    models.Token.user_id == stored_user.user_id,
+                    models.Token.user_id == stored_user.id,
                     models.Token.token == verify_token,
                 )
             )
             .first()
         )
-
         if not isCorrectToken:
             return HTMLResponse(content="""<h1>Invalid Link.</h1>""")
 
@@ -356,7 +334,7 @@ async def verify(
 
 @router.post("/resend-email")
 async def resendEmail(
-    email_data: schemas.ResendEmail,
+    email_data: schemas.EmailInput,
     db: Session = Depends(get_db),
 ):
     try:
@@ -373,7 +351,7 @@ async def resendEmail(
             )
 
         isExistedToken = (
-            db.query(models.Token).filter(models.Token.user_id == user.user_id).first()
+            db.query(models.Token).filter(models.Token.user_id == user.id).first()
         )
         if isExistedToken:
             raise HTTPException(
@@ -392,9 +370,7 @@ async def resendEmail(
 
 
 @router.post("/forget-password")
-async def forgetPassword(
-    email_user: schemas.ForgetPassword, db: Session = Depends(get_db)
-):
+async def forgetPassword(email_user: schemas.EmailInput, db: Session = Depends(get_db)):
     try:
         user = (
             db.query(models.User).filter(models.User.email == email_user.email).first()
@@ -482,10 +458,11 @@ async def confirmCode(confirm_data: schemas.ConfirmCode, db: Session = Depends(g
                     "msg": f"Invalid code.",
                 }
         else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Invalid user confirmation data.",
-            )
+            return {
+                "success": False,
+                "isCorrect": False,
+                "msg": f"Invalid user confirmation data.",
+            }
 
     except HTTPException as e:
         raise UnicornException(

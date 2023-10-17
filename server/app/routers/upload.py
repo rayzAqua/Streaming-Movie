@@ -1,7 +1,5 @@
 """
-Router UPLOAD
-Author: jinnguyen0612
-Email: hoangha0612.work@gmail.com
+    Router Upload
 """
 
 from fastapi import (
