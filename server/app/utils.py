@@ -52,12 +52,12 @@ def generate_expire_time():
 
 async def sendVerifyEmail(dbSession, userData):
     new_verify_token = secrets.token_hex(32)
-    new_token = models.Token(user_id=userData.user_id, token=new_verify_token)
+    new_token = models.Token(user_id=userData.id, token=new_verify_token)
     dbSession.add(new_token)
 
     # Tạo một chuỗi xác thực kiểm tra xem có đúng là user này yêu cầu xác thực tài khoản
     expire = generate_expire_time()
-    new_data = {"user_id": userData.user_id, "email": userData.email, "exp": expire}
+    new_data = {"user_id": userData.id, "email": userData.email, "exp": expire}
     new_user_token = jwt.encode(new_data, settings.secret_key, settings.algorithm)
 
     # Tạo url xác thực từ user_token và verify_token

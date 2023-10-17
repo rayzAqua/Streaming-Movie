@@ -36,17 +36,20 @@ def create_access_token(data: dict):
 
 def verify_access_token(token: str, credentials_exception):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        parts = token.split(".")
+        if len(parts) != 3:
+            raise credentials_exception
 
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         user_id: str = payload.get("user_id")  # type: ignore
         if user_id is None:
             raise credentials_exception
 
-        token_data = schemas.AccessTokenData(user_id=user_id)
-    except ExpiredSignatureError:
+        return user_id
+    except JWSError:
         raise credentials_exception
-
-    return token_data
+    except Exception as e:
+        raise credentials_exception
 
 
 def get_current_user(
@@ -58,6 +61,21 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    token = verify_access_token(token, credentials_exception)  # type: ignore
-    user = db.query(models.User).filter(models.User.user_id == token.user_id).first()  # type: ignore
-    return user
+    try:
+        user_id = verify_access_token(token, credentials_exception)
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        return user
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
