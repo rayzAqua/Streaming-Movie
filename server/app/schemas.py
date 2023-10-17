@@ -130,14 +130,28 @@ class ActorOut(Actor):
     id: int
 
 
-class Pricing(BaseModel):
-    name: str
-    price: Decimal
-    days: Decimal
-    status: bool
+class Package(BaseModel):
+    package_name: str
+    duration: int
 
 
-class PricingOut(Pricing):
+class Price(BaseModel):
+    price: float
+
+
+class PackagePrice(BaseModel):
+    price_id: int
+    start_at: datetime
+    end_at: datetime
+
+
+class EditPackagePrice(BaseModel):
+    price_id: Optional[int]
+    start_at: Optional[datetime]
+    end_at: Optional[datetime]
+
+
+class PackageOut(Package):
     id: int
 
 

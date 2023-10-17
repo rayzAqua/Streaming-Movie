@@ -19,7 +19,7 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 
 # POST
-@router.post("/ ", status_code=status.HTTP_201_CREATED)
+@router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
@@ -214,7 +214,7 @@ async def update_profile(
         update_data = {}
 
         if edit_user.lname is not None and edit_user.lname != "":
-            if len(edit_user.lname) > 12:
+            if len(edit_user.lname) > 36:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="LastName is too long.",

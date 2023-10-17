@@ -138,11 +138,11 @@ async def register(user: schemas.Register, db: Session = Depends(get_db)):
                 detail="First Name is required.",
             )
         # Lenght of name valiđate
-        if len(user.lname) >= 12:
+        if len(user.lname) > 36:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Last Name is too long."
             )
-        if len(user.fname) >= 12:
+        if len(user.fname) > 12:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="First Name is too long.",
