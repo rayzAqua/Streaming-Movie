@@ -10,7 +10,7 @@ function Profile() {
     <SideBar>
       <div className='flex flex-col gap-6'>
         <h2 className='text-xl font-bold'>Profile</h2>
-        <Uploader/>
+        {/* <Uploader/> */}
         <div className="text-sm w-full">
             <label className="text-border font-semibold">Full Name</label>
             <input

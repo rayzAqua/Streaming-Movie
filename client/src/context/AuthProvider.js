@@ -36,7 +36,8 @@ export const AuthContextProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem("tokens");
     localStorage.removeItem("payment");
-    navigate("/login");
+    // navigate("/login");
+    window.location.href = "/login";
   };
 
   return (
