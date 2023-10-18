@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import FlexMovieItems from "./FlexMovieItems";
 import { FaHeart, FaPlay, FaShareAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -17,23 +17,28 @@ function MovieInfo({
 }) {
   const userPayment = JSON.parse(localStorage.getItem("payment"));
 
-  function checkPayment() {
-    if (userPayment) {
-      const endDate = new Date(userPayment.end_date); // Ngày cần so sánh
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      if (
-        (userPayment.pricing_name != null ||
-          userPayment.film_name == movie.title) &&
-        endDate > today
-      ) {
-        console.log(false);
-        return false;
+  const [isNotValidPayment, setIsNotValidPayment] = useState(null);
+
+  useEffect(() => {
+    function checkPayment() {
+      if (userPayment) {
+        const endDate = new Date(userPayment.end_date); // Ngày cần so sánh
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        if (
+          (userPayment.pricing_name != null ||
+            userPayment.film_name == movie.title) &&
+          endDate > today
+        ) {
+          console.log(false);
+          return false;
+        }
       }
+      console.log(true);
+      return true;
     }
-    console.log(true);
-    return true;
-  }
+    setIsNotValidPayment(checkPayment());
+  }, [isNotValidPayment]);
 
   const handleFavorite = async (id) => {
     if (checkFavorite) {
@@ -136,7 +141,7 @@ function MovieInfo({
                 {/*Watch button*/}
                 <div className="sm:hidden md:block col-span-4 flex justify-end font-medium text-sm">
                   {user ? (
-                    checkPayment() ? (
+                    isNotValidPayment ? (
                       <button
                         onClick={(e) => setShow(true)}
                         className="bg-subMain py-4 hover:bg-dry transitions border-2 border-subMain rounded-full flex-rows gap-4 w-full sm:py-3"
@@ -173,7 +178,7 @@ function MovieInfo({
             {/*Play button*/}
             <div className="col-span-2 md:mt-0 mt-2 flex justify-end">
               {user ? (
-                checkPayment() ? (
+                isNotValidPayment ? (
                   <button
                     onClick={(e) => setShow(true)}
                     className="md:w-1/4 w-full relative flex-colo bg-subMain hover:bg-transparent border-2 border-subMain transitions md:h-64 h-20 rounded font-medium"

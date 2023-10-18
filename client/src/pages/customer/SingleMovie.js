@@ -54,7 +54,11 @@ function SingleMovie() {
         toast.error(response?.data?.message + "Please try again");
       }
     } catch (error) {
-      console.error("Lỗi khi gọi API:", error);
+      if (error.response && error.response.status === 409) {
+        toast.error(error.response.data.detail);
+      } else {
+        console.error("Lỗi khi gọi API:", error);
+      }
       toast.error("Please try again");
     }
   };
@@ -86,7 +90,6 @@ function SingleMovie() {
     );
     setActors(result?.data);
     setLoadActor(true);
-    console.log(actors);
   }
 
   async function getRate() {
@@ -99,17 +102,11 @@ function SingleMovie() {
 
   useEffect(() => {
     getMovie();
-  }, [param, load]);
-  useEffect(() => {
     if (movie != null) {
       getActors();
-    }
-  }, [param, loadActor]);
-  useEffect(() => {
-    if (movie != null) {
       getRate();
     }
-  }, [param, loadRate]);
+  }, [movie, param, load]);
   useEffect(() => {
     if (user != null) {
       checkFilmFavorite();
