@@ -42,7 +42,7 @@ def add_payment_for_film(
         .first()
     )
 
-    if isExistedValidPayment:
+    if isExistedValidPayment.film_id:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Already have a rent package."
         )
@@ -76,6 +76,18 @@ def add_payment_for_film(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
+    isExistedValidPayment = (
+        db.query(models.Payment)
+        .outerjoin(models.User, models.User.id == models.Payment.user_id)
+        .filter(models.Payment.end_date >= datetime.now())
+        .first()
+    )
+
+    if isExistedValidPayment.pricing_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Already have a package."
+        )
+
     pricing = db.query(models.Pricing).get(pricing_id)
     if not pricing:
         raise HTTPException(
