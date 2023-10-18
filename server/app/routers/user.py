@@ -133,7 +133,7 @@ async def change_pass(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
         )
 
-    hashed_password = utils.hash(edit_user.password)
+    hashed_password = await utils.hash(edit_user.password)
     edit_user.password = hashed_password
     user_query.update(edit_user.dict(), synchronize_session=False)  # type: ignore
     db.commit()

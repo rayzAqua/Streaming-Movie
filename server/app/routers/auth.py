@@ -58,6 +58,11 @@ async def login(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Email does not exist.",
             )
+        # Check password
+        if not await utils.verify(user_credentials.password, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail=f"Incorrect password."
+            )
         # Check status
         if not user.status:
             raise HTTPException(
@@ -74,19 +79,14 @@ async def login(
                 # Send verify email
                 await sendVerifyEmail(dbSession=db, userData=user)
                 return {
-                    "success": True,
+                    "success": False,
                     "msg": "An email was sent to you. Please check.",
                 }
             else:
                 return {
-                    "success": True,
+                    "success": False,
                     "msg": "Your account was not verify. Please verify.",
                 }
-        # Check password
-        if not await utils.verify(user_credentials.password, user.password):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=f"Incorrect password."
-            )
 
         # CREATE A TOKEN
         # Role
@@ -105,12 +105,15 @@ async def login(
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
         return {
-            "token_type": "bearer",
-            "access_token": access_token,
             "success": True,
-            "userInfo": userInfo,
-            "expiresIn": expire,
+            "user": {
+                "userInfo": userInfo,
+                "token_type": "bearer",
+                "access_token": access_token,
+                "expiresIn": expire,
+            },
         }
+
     except HTTPException as e:
         raise UnicornException(
             status_code=e.status_code, detail=e.detail, success=False
@@ -120,25 +123,31 @@ async def login(
 @router.post("/register")
 async def register(user: schemas.Register, db: Session = Depends(get_db)):
     try:
-        # Empty name validate
-        if user.name == "":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Full Name is required.",
-            )
-        # Lenght of name valiđate
-        if len(user.name) > 32:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Full Name is too long.",
-            )
-
         check_user = (
             db.query(models.User).filter(models.User.email == user.email).first()
         )
         if check_user:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Email already exists."
+            )
+
+        # Check len of pass
+        if len(user.password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Password is too short.",
+            )
+        # Empty name validate
+        if user.name == "":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Full Name is required.",
+            )
+        # Lenght of name valiđate
+        if len(user.name) > 32:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Full Name is too long.",
             )
 
         # Tạo một bản ghi User mới với trạng thái verify (status = 2)
@@ -157,7 +166,7 @@ async def register(user: schemas.Register, db: Session = Depends(get_db)):
 
         return {
             "success": True,
-            "msg": "Create user successfully. Please verify your email",
+            "msg": "Register successfully. Please verify your email",
         }
     except HTTPException as e:
         raise UnicornException(
@@ -390,7 +399,7 @@ async def forgetPassword(email_user: schemas.EmailInput, db: Session = Depends(g
             if expiration_time and current_time <= expiration_time:
                 # Mã xác nhận chưa hết hạn, không gửi lại
                 return {
-                    "success": True,
+                    "success": False,
                     "msg": f"An email has already been sent to your address. Please check it and verify.",
                 }
 
@@ -464,6 +473,47 @@ async def confirmCode(confirm_data: schemas.ConfirmCode, db: Session = Depends(g
                 "msg": f"Invalid user confirmation data.",
             }
 
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
+        )
+
+
+@router.post("/change-password")
+async def change_pass(
+    data: schemas.ChangePassword,
+    db: Session = Depends(get_db),
+):
+    try:
+        query = db.query(models.User).filter(models.User.email == data.email)
+        user = query.first()
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist."
+            )
+
+        if len(data.new_password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Password is too short.",
+            )
+
+        if data.isCorrect:
+            hashed_password = await utils.hash(data.new_password)
+            update_data = {"password": hashed_password}
+            query.update(update_data, synchronize_session=False)  # type: ignore
+            db.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid Infomation.",
+            )
+
+        return {
+            "success": True,
+            "msg": "Change Password successfully. Please login again.",
+        }
     except HTTPException as e:
         raise UnicornException(
             status_code=e.status_code, detail=e.detail, success=False

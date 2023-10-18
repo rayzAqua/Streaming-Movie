@@ -1,7 +1,5 @@
 """
-Config Database
-Author: jinnguyen0612
-Email: hoangha0612.work@gmail.com
+    Config Database
 """
 
 import time

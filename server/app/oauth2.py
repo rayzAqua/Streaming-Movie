@@ -1,7 +1,5 @@
 """
-Authorize
-Author: jinnguyen0612
-Email: hoangha0612.work@gmail.com
+    Authorize
 """
 
 from jose import ExpiredSignatureError, JWSError, jwt
