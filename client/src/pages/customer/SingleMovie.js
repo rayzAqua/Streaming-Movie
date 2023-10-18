@@ -86,6 +86,7 @@ function SingleMovie() {
     );
     setActors(result?.data);
     setLoadActor(true);
+    console.log(actors);
   }
 
   async function getRate() {
