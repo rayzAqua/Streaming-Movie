@@ -132,3 +132,12 @@ class PricingOut(Pricing):
 
 class UserFavoriteFilm(BaseModel):
     film_id: int
+
+
+class PaymentForm(BaseModel):
+    order_id: str
+    order_type: str
+    amount: int
+    order_desc: str
+    bank_code: Optional[int]
+    language: Optional[str]

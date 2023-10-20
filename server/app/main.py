@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from . import models
 from .database import engine
-from .routers import user, auth, films, upload, genres, actors, pricing, payment
+from .routers import user, auth, films, upload, genres, actors, pricing, payment, vnpay
 from .config import settings
 from fastapi.middleware.cors import CORSMiddleware
 from .utils import UnicornException
@@ -37,6 +37,7 @@ app.include_router(pricing.router)
 app.include_router(actors.router)
 app.include_router(payment.router)
 app.include_router(upload.router)
+app.include_router(vnpay.router)
 
 
 @app.get("/")

@@ -1,6 +1,6 @@
 import React from "react";
 import Layout from "../../layout/Layout";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import MovieInfo from "../../components/customer/MovieInfo";
 import Titles from "../../components/customer/Title";
 import { useState } from "react";
@@ -17,6 +17,7 @@ import MovieRating from "../../components/customer/MovieRating";
 import PopularMovies from "../../components/customer/PopularMovies";
 import { GiCancel } from "react-icons/gi";
 import { toast } from "react-toastify";
+import { useRentMovieContext } from "../../context/RentMovieProvider";
 
 function SingleMovie() {
   const { id } = useParams();
@@ -32,6 +33,9 @@ function SingleMovie() {
   const [rate, setRate] = useState();
   const [show, setShow] = useState(false);
 
+  const navigate = useNavigate();
+  const [rentData, setRentData] = useRentMovieContext();
+
   const handleClose = () => {
     setShow(false);
   };
@@ -41,25 +45,44 @@ function SingleMovie() {
   };
 
   const handleBtn = async (e) => {
-    const days = e.currentTarget.getAttribute("data-days");
     try {
+      const days = e.currentTarget.getAttribute("data-days");
+      const package_name = `${days} Day Watching ${movie.title}`;
+      const total = movie.price * days;
+
       const response = await axiosApiInstance.post(
         `/payment/forFilm/${movie.id}?days=${days}`
       );
 
       if (response?.status === 200 || response?.status === 201) {
+        const paymentData = {
+          package_name: package_name,
+          total: total,
+          order_id: response.data.payment.id,
+          customer: response.data.payment.customer,
+          email: response.data.payment.email,
+          hasData: true,
+          movie_title: movie.title,
+        };
+
+        localStorage.setItem("rentData", JSON.stringify(paymentData));
+        setRentData(paymentData);
+
         toast.success(response?.data.msg);
-        window.location.href = "/";
+        navigate("/payment");
       } else {
-        toast.error(response?.data?.message + "Please try again");
+        toast.error(response?.data?.message + " Please try again");
       }
     } catch (error) {
       if (error.response && error.response.status === 409) {
         toast.error(error.response.data.detail);
+      } else if (error.response && error.response.status === 422) {
+        toast.error(error.response.data.detail[0].msg);
+      } else if (error.response && error.response.status === 500) {
+        toast.error(error.response.data.detail);
       } else {
-        console.error("Lỗi khi gọi API:", error);
+        toast.error("Something is wrong.");
       }
-      toast.error("Please try again");
     }
   };
 
@@ -81,15 +104,13 @@ function SingleMovie() {
       axios.defaults.baseURL + `/films/getFilm/${id}`
     );
     setMovie(result?.data);
-    setLoad(true);
   }
 
   async function getActors() {
     const result = await axios.get(
       axios.defaults.baseURL + `/actors/getFromFilm/${movie.id}`
     );
-    setActors(result?.data);
-    setLoadActor(true);
+    setActors(result.data);
   }
 
   async function getRate() {
@@ -97,18 +118,21 @@ function SingleMovie() {
       axios.defaults.baseURL + `/films/averageRating/${movie.id}`
     );
     setRate(result?.data.average_rating);
-    setLoadRate(true);
   }
 
   useEffect(() => {
     getMovie();
-    if (movie != null) {
+  }, []);
+
+  useEffect(() => {
+    if (movie) {
       getActors();
       getRate();
     }
-  }, [movie, param, load]);
+  }, [movie]);
+
   useEffect(() => {
-    if (user != null) {
+    if (user) {
       checkFilmFavorite();
     }
   }, [param, loadFavorite]);
