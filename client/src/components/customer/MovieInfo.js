@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import FlexMovieItems from "./FlexMovieItems";
 import { FaHeart, FaPlay, FaShareAlt } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Rating from "./Star";
 import { toast } from "react-toastify";
 import axiosApiInstance from "../../context/intercepter";
+import { useRentMovieContext } from "../../context/RentMovieProvider";
+import { getUserPayment } from "../../api/utils";
 
 function MovieInfo({
   movie,
@@ -15,29 +17,45 @@ function MovieInfo({
   setLoadFavorite,
   setShow,
 }) {
-  const userPayment = JSON.parse(localStorage.getItem("payment"));
-
   const [isNotValidPayment, setIsNotValidPayment] = useState(null);
 
+  const navigate = useNavigate();
+  const [rentData, setRentData] = useRentMovieContext();
+
+  const userPayment = JSON.parse(localStorage.getItem("payment"));
+
   useEffect(() => {
-    function checkPayment() {
-      if (userPayment) {
-        const endDate = new Date(userPayment.end_date); // Ngày cần so sánh
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-        if (
-          (userPayment.pricing_name != null ||
-            userPayment.film_name == movie.title) &&
-          endDate > today
-        ) {
-          console.log(false);
+    const checkPayment = () => {
+      if (userPayment && userPayment.length > 0) {
+        // today.setUTCHours(0, 0, 0, 0);
+
+        const hasMatchingPayment = userPayment.some((payment) => {
+          const isHasPackage = payment.pricing_name !== null;
+          const isHasRentFilm = payment.film_name !== null;
+          if (
+            isHasPackage ||
+            (isHasRentFilm && payment.film_name === movie.title)
+          ) {
+            const endDate = new Date(payment.end_date); // Ngày cần so sánh
+            const today = new Date();
+            if (endDate >= today) {
+              console.log("Dot it");
+              return true;
+            } else {
+              return false;
+            }
+          }
+          return false;
+        });
+
+        if (hasMatchingPayment) {
           return false;
         }
+        return true;
       }
-      console.log(true);
-      return true;
-    }
-    setIsNotValidPayment(checkPayment());
+    };
+    const flag = checkPayment();
+    setIsNotValidPayment(flag);
   }, [isNotValidPayment]);
 
   const handleFavorite = async (id) => {
@@ -143,7 +161,14 @@ function MovieInfo({
                   {user ? (
                     isNotValidPayment ? (
                       <button
-                        onClick={(e) => setShow(true)}
+                        onClick={(e) => {
+                          if (rentData.hasData) {
+                            setShow(false);
+                            navigate("/payment");
+                          } else {
+                            setShow(true);
+                          }
+                        }}
                         className="bg-subMain py-4 hover:bg-dry transitions border-2 border-subMain rounded-full flex-rows gap-4 w-full sm:py-3"
                       >
                         <FaPlay className="h-3 w-3" /> Watch

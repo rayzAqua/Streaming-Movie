@@ -27,6 +27,8 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import { AuthContextProvider } from "./context/AuthProvider";
 import jwtDecode from "jwt-decode";
 import Package from "./pages/customer/Package";
+import { RentMovieProvider } from "./context/RentMovieProvider";
+import Order from "./pages/customer/Order";
 
 function App() {
   const tokens = JSON.parse(localStorage.getItem("tokens"));
@@ -34,40 +36,43 @@ function App() {
   Aos.init();
   return (
     <AuthContextProvider>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        {permission === "ADMIN" ? (
-          <>
-            <Route path="/dashboard" element={<DashBoard />} />
-            <Route path="/" element={<Customer />} />
-            <Route path="/manage-movie" element={<AdminMovies />} />
-            <Route path="/genre" element={<Genres />} />
-            <Route path="/actor" element={<Actor />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/payment" element={<Payment />} />
-            <Route path="/admin-profile" element={<AdminProfile />} />
-          </>
-        ) : (
-          <>
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/password" element={<ChangePass />} />
-            <Route path="/favorite" element={<Favorite />} />
-            <Route path="/watch/:id" element={<WatchPage />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/package" element={<Package />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/movies" element={<MoviesPage />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/movies/:id" element={<SingleMovie />} />
-            <Route path="/forgot-pass" element={<UserFogotPass />} />
-            <Route path="/change-pass" element={<UserChangePass />} />
-            <Route path="/verify-code" element={<Verify />} />
-          </>
-        )}
+      <RentMovieProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          {permission === "ADMIN" ? (
+            <>
+              <Route path="/dashboard" element={<DashBoard />} />
+              <Route path="/" element={<Customer />} />
+              <Route path="/manage-movie" element={<AdminMovies />} />
+              <Route path="/genre" element={<Genres />} />
+              <Route path="/actor" element={<Actor />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/payment" element={<Payment />} />
+              <Route path="/admin-profile" element={<AdminProfile />} />
+            </>
+          ) : (
+            <>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/password" element={<ChangePass />} />
+              <Route path="/favorite" element={<Favorite />} />
+              <Route path="/watch/:id" element={<WatchPage />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/package" element={<Package />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/movies" element={<MoviesPage />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/movies/:id" element={<SingleMovie />} />
+              <Route path="/forgot-pass" element={<UserFogotPass />} />
+              <Route path="/change-pass" element={<UserChangePass />} />
+              <Route path="/verify-code" element={<Verify />} />
+              <Route path="/payment" element={<Order />} />
+            </>
+          )}
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </RentMovieProvider>
     </AuthContextProvider>
   );
 }

@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     algorithm: str
     access_token_expire_minutes: int
     base_url: str
+    vnpay_tmn_code: str
+    vnpay_hash_secret_key: str
+    vnpay_payment_url: str
+    vnpay_return_url: str
+    vnpay_api_url: str
 
     # Thiết lập env_file là file .env để đọc thông tin cấu hình từ filw .env
     class Config:
