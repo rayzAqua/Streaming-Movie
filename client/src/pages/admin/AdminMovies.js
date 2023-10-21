@@ -321,6 +321,7 @@ function AdminMovies() {
       toast.error("Error empty entity");
       return;
     }
+    console.log(photo);
     console.log(video);
     e.preventDefault();
     const payload = {
@@ -509,11 +510,14 @@ function AdminMovies() {
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={handleFilePhotoChange}
+                          onChange={(e) => handleFilePhotoChange(e)}
                           className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                         />
                         {filePhoto ? (
-                          <button type="button" onClick={handlePhotoUpload}>
+                          <button
+                            type="button"
+                            onClick={(e) => handlePhotoUpload(e)}
+                          >
                             Upload
                           </button>
                         ) : (
@@ -568,11 +572,14 @@ function AdminMovies() {
                         <input
                           type="file"
                           accept="video/*"
-                          onChange={handleFileVideoChange}
+                          onChange={(e) => handleFileVideoChange(e)}
                           className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                         />
                         {fileVideo ? (
-                          <button type="button" onClick={handleVideoUpload}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleVideoUpload(e)}
+                          >
                             Upload
                           </button>
                         ) : (

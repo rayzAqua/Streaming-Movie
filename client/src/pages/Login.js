@@ -20,28 +20,44 @@ function LoginPage() {
     setPwdShown(!pwdShown);
   };
 
+  const isValidEmail = (email) => {
+    // Sử dụng biểu thức chính quy để kiểm tra định dạng email
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    return emailRegex.test(email);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    email == ""
-      ? setEmailMsgOut("(PLEASE INPUT YOUR EMAIL)")
-      : setEmailMsgOut("");
-    password == ""
-      ? setpasswordMsgOut("(PLEASE INPUT YOUR PASSWORD)")
-      : setpasswordMsgOut("");
+    setEmailMsgOut("");
+    setpasswordMsgOut("");
+    setLoginMsgOut("");
+
+    if (email === "" || password === "") {
+      if (email === "") {
+        setEmailMsgOut("(PLEASE INPUT YOUR EMAIL)");
+      }
+      if (password === "") {
+        setpasswordMsgOut("(PLEASE INPUT YOUR PASSWORD)");
+      }
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setEmailMsgOut("(INVALID EMAIL FORMAT)");
+      return;
+    }
+
     const formData = new URLSearchParams();
     formData.append("username", email);
     formData.append("password", password);
+
     try {
-      if (email === "" || password === "") {
-        return;
-      }
       await login(formData);
       setLoginMsgOut("");
     } catch (error) {
       setLoginMsgOut("EMAIL OR PASSWORD IS INCORRECT");
     }
   };
-
   return (
     <Layout>
       <form className="container mx-auto px-2 mt-16 mb-20 flex-colo">
