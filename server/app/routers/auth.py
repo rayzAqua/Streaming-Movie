@@ -128,7 +128,7 @@ async def register(user: schemas.Register, db: Session = Depends(get_db)):
         )
         if check_user:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Email already exists."
+                status_code=status.HTTP_409_CONFLICT, detail="Email already register."
             )
 
         # Check len of pass

@@ -56,8 +56,15 @@ function Register() {
       setPassMsgOut("");
     }
 
+    if (confirmPassword === "") {
+      setConfirmPassMsgOut("(PLEASE CONFIRM YOUR PASSWORD)");
+      return;
+    } else {
+      setConfirmPassMsgOut("");
+    }
+
     if (password !== confirmPassword) {
-      toast.error("Password and confirm password are not match,");
+      toast.error("Password and confirm password are not match");
       return;
     } else {
       setConfirmPassMsgOut("");
