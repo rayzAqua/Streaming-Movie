@@ -15,9 +15,10 @@ from fastapi import (
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional, Text, List
-
 from ..database import get_db
 from .. import database, schemas, models, utils, oauth2
+from ..utils import UnicornException
+
 
 router = APIRouter(prefix="/pricing", tags=["Pricing"])
 
@@ -46,10 +47,37 @@ async def get_all_Pricing(db: Session = Depends(get_db)):
     return pricing
 
 
-@router.get("/getActive", response_model=List[schemas.PricingOut])
+@router.get("/getActive")
 async def get_active_Pricing(db: Session = Depends(get_db)):
-    pricing = db.query(models.Pricing).filter(models.Pricing.status == True).all()
-    return pricing
+    try:
+        packages = db.query(models.Pricing).filter(models.Pricing.status == True).all()
+
+        if not packages:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Not found."
+            )
+
+        package_data = [
+            {
+                "id": package.id,
+                "name": package.name,
+                "price": package.price,
+                "days": package.days,
+                "status": package.status,
+            }
+            for package in packages
+        ]
+
+        return {
+            "success": True,
+            "msg": "Get all active package successfully",
+            "packages": package_data,
+        }
+
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
+        )
 
 
 @router.get("/get/{id}", response_model=schemas.PricingOut)

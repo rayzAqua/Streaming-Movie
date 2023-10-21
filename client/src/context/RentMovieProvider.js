@@ -22,12 +22,11 @@ const RentMovieProvider = ({ children }) => {
 
   useEffect(() => {
     if (
-      !rentData.package_name &&
       !rentData.total &&
       !rentData.order_id &&
       !rentData.customer &&
       !rentData.email &&
-      !rentData.movie_title
+      (!rentData.package_name || !rentData.movie_title)
     ) {
       const storedRentData = localStorage.getItem("rentData");
       if (storedRentData) {

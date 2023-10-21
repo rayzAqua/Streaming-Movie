@@ -50,17 +50,17 @@ function SingleMovie() {
       const package_name = `${days} Day Watching ${movie.title}`;
       const total = movie.price * days;
 
-      const response = await axiosApiInstance.post(
+      const res = await axiosApiInstance.post(
         `/payment/forFilm/${movie.id}?days=${days}`
       );
 
-      if (response?.status === 200 || response?.status === 201) {
+      if (res && res.data.success) {
         const paymentData = {
           package_name: package_name,
           total: total,
-          order_id: response.data.payment.id,
-          customer: response.data.payment.customer,
-          email: response.data.payment.email,
+          order_id: res.data.payment.id,
+          customer: res.data.payment.customer,
+          email: res.data.payment.email,
           hasData: true,
           movie_title: movie.title,
         };
@@ -68,10 +68,10 @@ function SingleMovie() {
         localStorage.setItem("rentData", JSON.stringify(paymentData));
         setRentData(paymentData);
 
-        toast.success(response?.data.msg);
+        toast.success(res.data.msg);
         navigate("/payment");
       } else {
-        toast.error(response?.data?.message + " Please try again");
+        toast.error(res.data.message + " Please try again");
       }
     } catch (error) {
       if (error.response && error.response.status === 409) {

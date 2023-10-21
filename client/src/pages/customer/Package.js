@@ -1,6 +1,6 @@
 import React from "react";
 import Layout from "../../layout/Layout";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "../../api/axios";
 import { useEffect } from "react";
@@ -8,56 +8,87 @@ import { useContext } from "react";
 import AuthContext from "../../context/AuthProvider";
 import { toast } from "react-toastify";
 import axiosApiInstance from "../../context/intercepter";
+import { useRentMovieContext } from "../../context/RentMovieProvider";
 
 function Package() {
   const param = useLocation();
-  const userPayment = JSON.parse(localStorage.getItem("payment"));
   const [load, setLoad] = useState(false);
-  const [pricing, setPricing] = useState([]);
+  const [subPackages, setPackages] = useState([]);
   const { user } = useContext(AuthContext);
+  const [rentData, setRentData] = useRentMovieContext();
+  const navigate = useNavigate();
 
-  const handleBtn = async (e) => {
-    if (userPayment) {
-      const endDate = new Date(userPayment.end_date); // Ngày cần so sánh
-      const today = new Date();
-      if (userPayment.pricing_name && endDate > today) {
-        toast.warn("Already register");
-      } else {
-        try {
-          const id = e.currentTarget.getAttribute("data-id");
-          const response = await axiosApiInstance.post(
-            `/payment/forPackage/${id}`
-          );
-
-          if (response?.status === 200 || response?.status === 201) {
-            toast.success(response?.data.msg);
-            window.location.href = "/";
-          } else {
-            toast.error(response?.data?.message + "Please try again");
-          }
-        } catch (error) {
-          console.error("Lỗi khi gọi API:", error);
-          toast.error("Please try again");
-        }
-      }
-    } else {
+  // Get package
+  useEffect(() => {
+    const getPricing = async () => {
       try {
-        console.log("out");
-        localStorage.removeItem("payment");
-        const id = e.currentTarget.getAttribute("data-id");
-        const response = await axiosApiInstance.post(
-          `/payment/forPackage/${id}`
+        const res = await axios.get(
+          axios.defaults.baseURL + `/pricing/getActive`
         );
 
-        if (response?.status === 200 || response?.status === 201) {
-          toast.success(response?.data.msg);
-          window.location.href = "/";
+        if (res && res.data.success) {
+          console.log(res.data.msg);
+          setPackages(res.data.packages);
         } else {
-          toast.error(response?.data?.message + "Please try again");
+          console.log(res.data.msg);
         }
       } catch (error) {
-        console.error("Lỗi khi gọi API:", error);
-        toast.error("Please try again");
+        if (error.response && error.response.status === 404) {
+          toast.error(error.response.data.detail);
+        } else if (error.response && error.response.status === 500) {
+          toast.error(error.response.data.detail);
+        } else {
+          toast.error("Something is wrong.");
+        }
+      }
+    };
+
+    getPricing();
+  }, []);
+
+  const userPayment = JSON.parse(localStorage.getItem("payment"));
+
+  const handleBtn = async (e) => {
+    try {
+      const packageId = e.currentTarget.getAttribute("data-id");
+      const packageName = e.currentTarget.getAttribute("data-name");
+      const packagePrice = e.currentTarget.getAttribute("data-price");
+
+      console.log(packageId);
+      const res = await axiosApiInstance.post(
+        `/payment/forPackage/${packageId}`
+      );
+      if (res && res.data.success) {
+        console.log(res.data.msg);
+        console.log(res.data.payment);
+
+        if (res.data.payment) {
+          const paymentData = {
+            package_name: packageName,
+            total: packagePrice,
+            order_id: res.data.payment.id,
+            customer: res.data.payment.customer,
+            email: res.data.payment.email,
+            hasData: true,
+            movie_title: null,
+          };
+          localStorage.setItem("rentData", JSON.stringify(paymentData));
+          setRentData(paymentData);
+          toast.success(res.data.msg);
+          navigate("/payment");
+        }
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        toast.error(error.response.data.detail);
+      } else if (error.response && error.response.status === 409) {
+        toast.error(error.response.data.detail);
+      } else if (error.response && error.response.status === 422) {
+        toast.error(error.response.data.detail[0].msg);
+      } else if (error.response && error.response.status === 500) {
+        toast.error(error.response.data.detail);
+      } else {
+        toast.error("Something is wrong.");
       }
     }
   };
@@ -66,66 +97,89 @@ function Package() {
     window.location.href = "/login";
   };
 
-  async function getPricing() {
-    const result = await axios.get(
-      axios.defaults.baseURL + `/pricing/getActive`
-    );
-    setPricing(result?.data);
-    setLoad(true);
-  }
-  useEffect(() => {
-    getPricing();
-  }, [param, load]);
+  const currentTime = new Date();
+  const endTime = new Date(userPayment[0]?.end_date);
+  const timeLeftInSeconds = (endTime - currentTime) / 1000;
+  const daysLeft = Math.floor(timeLeftInSeconds / (60 * 60 * 24));
 
   return (
     <Layout>
-      <div class="bg-main">
-        <div class="container px-6 py-8 mx-auto">
-          <h1 class="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
-            Pricing Plan
-          </h1>
+      <div className="bg-main">
+        <div className="container px-6 py-8 mx-auto">
+          {!userPayment[0].pricing_name ? (
+            <>
+              <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
+                Pricing Plan
+              </h1>
 
-          <p class="max-w-2xl mx-auto mt-4 text-center text-dryGray xl:mt-6 dark:text-gray-300">
-            Register package for watching unlimited our Movies on NetMovie
-          </p>
+              <p className="max-w-2xl mx-auto mt-4 text-center text-dryGray xl:mt-6 dark:text-gray-300">
+                Register package for watching unlimited our Movies on NetMovie
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
+                Your Register
+              </h1>
+            </>
+          )}
+          {!userPayment[0].pricing_name ? (
+            subPackages.map((pack) => (
+              <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
+                <div
+                  key={pack.id}
+                  className="w-full p-8 space-y-8 text-center bg-blue-600 rounded-lg"
+                >
+                  <p className="font-medium text-gray-200 uppercase">
+                    {pack.name}
+                  </p>
 
-          <div class="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
-            {pricing.map((p) => (
-              <div
-                key={p.id}
-                class="w-full p-8 space-y-8 text-center bg-blue-600 rounded-lg"
-              >
-                <p class="font-medium text-gray-200 uppercase">{p.name}</p>
+                  <h2 className="text-5xl font-bold text-white uppercase dark:text-gray-100">
+                    {`${pack.price.toLocaleString("VN-vi")} VND`}
+                  </h2>
 
-                <h2 class="text-5xl font-bold text-white uppercase dark:text-gray-100">
-                  {p.price} VND
-                </h2>
-
-                <p class="font-medium text-xl text-gray-200">
-                  For {p.days} {"days"}
-                </p>
-                {user ? (
-                  <button
-                    type="button"
-                    onClick={handleBtn}
-                    key={p.id}
-                    data-id={p.id}
-                    class="block w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
-                  >
-                    Register Now
-                  </button>
-                ) : (
-                  <button
-                    key={p.id}
-                    onClick={handleLogin}
-                    class="w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
-                  >
-                    Register Now
-                  </button>
-                )}
+                  <p className="font-medium text-xl text-gray-200">
+                    For {pack.days} {"days"}
+                  </p>
+                  {user ? (
+                    <button
+                      type="button"
+                      onClick={handleBtn}
+                      key={pack.id}
+                      data-id={pack.id}
+                      data-name={pack.name}
+                      data-price={pack.price}
+                      className="block w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
+                    >
+                      Register Now
+                    </button>
+                  ) : (
+                    <button
+                      key={pack.id}
+                      onClick={handleLogin}
+                      className="w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
+                    >
+                      Register Now
+                    </button>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+            ))
+          ) : (
+            <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
+              <div className="col-span-full w-5/12 p-8 space-y-8 text-center bg-green-600 rounded-lg mt-5 mx-auto mb-5">
+                <p className="font-medium text-gray-200 uppercase">
+                  {userPayment[0].pricing_name}
+                </p>
+                <p className="font-medium text-xl text-gray-200">
+                  Duration: {daysLeft} {"days"}
+                </p>
+                <p className="max-w-2xl mx-auto mt-4 text-center text-dryGray xl:mt-6 dark:text-gray-300">
+                  Wishing you a great movie-watching experience at NetMovie
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
