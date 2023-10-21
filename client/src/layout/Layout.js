@@ -1,19 +1,19 @@
-import React from 'react';
-import NavBar from "../components/nav/NavBar"
-import Footer from "../components/Footer"
-import { ToastContainer } from 'react-toastify';
+import React from "react";
+import NavBar from "../components/nav/NavBar";
+import Footer from "../components/Footer";
+import { ToastContainer } from "react-toastify";
 
-function Layout({children}) {
+function Layout({ children }) {
   return (
     <>
-    <ToastContainer />
-    <div className='bg-main text-white'>
-        <NavBar/>
+      <ToastContainer />
+      <div className="bg-main text-white">
+        <NavBar />
         {children}
-        <Footer/>
-    </div> 
+        <Footer />
+      </div>
     </>
-  )
+  );
 }
 
-export default Layout
+export default Layout;

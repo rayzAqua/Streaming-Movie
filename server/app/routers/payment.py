@@ -27,8 +27,8 @@ router = APIRouter(prefix="/payment", tags=["Payment"])
 
 
 # POST
-@router.post("/forFilm/{film_id}", status_code=status.HTTP_201_CREATED)
-def add_payment_for_film(
+@router.post("/forFilm/{film_id}")
+async def add_payment_for_film(
     film_id: int,
     days: int,
     db: Session = Depends(get_db),
@@ -38,11 +38,11 @@ def add_payment_for_film(
         film = db.query(models.Film).get(film_id)
         if not film:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Film not found."
             )
         if not film.status:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Film not found."
             )
 
         pay = film.price * days
@@ -67,7 +67,7 @@ def add_payment_for_film(
             "pay": payment.pay,
             "status": payment.status,
             "created_at": payment.created_at,
-            "end_date": payment.end_date,  # Đảm bảo định dạng phù hợp
+            "end_date": payment.end_date,
             "customer": current_user.name,
             "email": current_user.email,
         }
@@ -83,55 +83,79 @@ def add_payment_for_film(
         )
 
 
-@router.post("/forPackage/{pricing_id}", status_code=status.HTTP_201_CREATED)
-def add_payment_for_film(
+@router.post("/forPackage/{pricing_id}")
+async def add_payment_for_package(
     pricing_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
-    isExistedValidPayment = (
-        db.query(models.Payment)
-        .outerjoin(models.User, models.User.id == models.Payment.user_id)
-        .filter(models.Payment.end_date >= datetime.now())
-        .first()
-    )
+    try:
+        # Check already register
+        payment = (
+            db.query(models.Payment)
+            .filter(
+                and_(
+                    models.Payment.user_id == current_user.id,
+                    models.Payment.film_id == None,
+                    models.Payment.end_date >= datetime.now(),
+                )
+            )
+            .first()
+        )
+        if payment:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Already Register."
+            )
 
-    if (
-        isExistedValidPayment.pricing_id
-        and isExistedValidPayment.end_date >= datetime.now()
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Already have a package."
+        package = db.query(models.Pricing).get(pricing_id)
+        if not package:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Package not found."
+            )
+        if not package.status:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Package not found."
+            )
+
+        pay = package.price
+
+        # Convert pricing.days to an integer before using it in timedelta
+        days = int(package.days)
+        end_date = datetime.now() + timedelta(days=days)
+
+        payment = models.Payment(
+            user_id=current_user.id,
+            pricing_id=pricing_id,
+            pay=pay,
+            status=0,
+            end_date=end_date,
         )
 
-    pricing = db.query(models.Pricing).get(pricing_id)
-    if not pricing:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Pricing not found"
+        db.add(payment)
+        db.commit()
+        db.refresh(payment)
+
+        payment_data = {
+            "id": payment.id,
+            "user_id": payment.user_id,
+            "film_id": payment.film_id,
+            "pay": payment.pay,
+            "status": payment.status,
+            "created_at": payment.created_at,
+            "end_date": payment.end_date,
+            "customer": current_user.name,
+            "email": current_user.email,
+        }
+
+        return {
+            "success": True,
+            "msg": "Payment added successfully",
+            "payment": payment_data,
+        }
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
         )
-    if not pricing.status:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Pricing not found"
-        )
-
-    pay = pricing.price
-
-    # Convert pricing.days to an integer before using it in timedelta
-    days = int(pricing.days)
-    end_date = datetime.now() + timedelta(days=days)
-
-    payment = models.Payment(
-        user_id=current_user.id,
-        pricing_id=pricing_id,
-        pay=pay,
-        status=0,
-        end_date=end_date,
-    )
-    db.add(payment)
-    db.commit()
-    db.refresh(payment)
-
-    return {"message": "Payment added successfully"}
 
 
 # END POST

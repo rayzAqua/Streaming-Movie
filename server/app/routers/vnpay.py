@@ -109,62 +109,6 @@ async def payment(
         )
 
 
-@router.get("/payment-ipn")
-def payment_ipn(
-    vnp_TxnRef: str,
-    vnp_Amount: int,
-    vnp_OrderInfo: str,
-    vnp_TransactionNo: str,
-    vnp_ResponseCode: str,
-    vnp_TmnCode: str,
-    vnp_PayDate: str,
-    vnp_BankCode: str,
-    vnp_CardType: str,
-):
-    inputData = {
-        "order_id": vnp_TxnRef,
-        "amount": vnp_Amount,
-        "order_desc": vnp_OrderInfo,
-        "vnp_TransactionNo": vnp_TransactionNo,
-        "vnp_ResponseCode": vnp_ResponseCode,
-        "vnp_TmnCode": vnp_TmnCode,
-        "vnp_PayDate": vnp_PayDate,
-        "vnp_BankCode": vnp_BankCode,
-        "vnp_CardType": vnp_CardType,
-    }
-
-    vnp = vnpayClass.vnpay()
-    vnp.responseData = inputData
-
-    if vnp.validate_response(settings.vnpay_hash_secret_key):
-        # Check & Update Order Status in your Database
-        # Your code here
-        firstTimeUpdate = True
-        totalamount = True
-        if totalamount:
-            if firstTimeUpdate:
-                if vnp_ResponseCode == "00":
-                    print("Payment Success. Your code implement here")
-                else:
-                    print("Payment Error. Your code implement here")
-
-                # Return VNPAY: Merchant update success
-                result = JSONResponse({"RspCode": "00", "Message": "Confirm Success"})
-            else:
-                # Already Update
-                result = JSONResponse(
-                    {"RspCode": "02", "Message": "Order Already Update"}
-                )
-        else:
-            # invalid amount
-            result = JSONResponse({"RspCode": "04", "Message": "invalid amount"})
-    else:
-        # Invalid Signature
-        result = JSONResponse({"RspCode": "97", "Message": "Invalid Signature"})
-
-    return result
-
-
 @router.get("/payment-return")
 def payment_return(
     request: Request,

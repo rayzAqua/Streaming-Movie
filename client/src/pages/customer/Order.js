@@ -9,7 +9,6 @@ import { getUserPayment } from "../../api/utils";
 
 const Order = () => {
   const navigate = useNavigate();
-  const [isPaymentProcess, setIsPaymentProcess] = useState(false);
   const [rentData, setRentData] = useRentMovieContext();
 
   // Payment data
@@ -57,7 +56,11 @@ const Order = () => {
               clearInterval(checkInterval);
               localStorage.removeItem("rentData");
               await getUserPayment();
-              window.location.href = `/movies/${rentData.movie_title}`;
+              if (rentData.movie_title) {
+                window.location.href = `/movies/${rentData.movie_title}`;
+              } else {
+                window.location.href = `/package`;
+              }
             }
           }, 5000);
         } else {
@@ -65,7 +68,11 @@ const Order = () => {
           toast.warning(`${res.data.msg}. Waiting for redirect.`);
           localStorage.removeItem("rentData");
           setTimeout(() => {
-            window.location.href = `/movies/${rentData.movie_title}`;
+            if (rentData.movie_title) {
+              window.location.href = `/movies/${rentData.movie_title}`;
+            } else {
+              window.location.href = `/package`;
+            }
           }, 2000);
         }
       } else {
@@ -94,12 +101,22 @@ const Order = () => {
 
         if (res && res.data.success) {
           console.log(res.data.msg);
-          window.location.href = `/movies/${rentData.movie_title}`;
+          localStorage.removeItem("rentData");
+          toast.warning(`${res.data.msg}. Waiting for redirect.`);
+          if (rentData.movie_title) {
+            window.location.href = `/movies/${rentData.movie_title}`;
+          } else {
+            window.location.href = `/package`;
+          }
         } else {
           toast.warning(`${res.data.msg}. Waiting for redirect.`);
           localStorage.removeItem("rentData");
           setTimeout(() => {
-            window.location.href = `/movies/${rentData.movie_title}`;
+            if (rentData.movie_title) {
+              window.location.href = `/movies/${rentData.movie_title}`;
+            } else {
+              window.location.href = `/package`;
+            }
           }, 2000);
         }
       } else {
