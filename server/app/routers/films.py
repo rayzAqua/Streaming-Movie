@@ -249,6 +249,7 @@ async def get_film(db: Session = Depends(get_db), search: Optional[str] = None, 
     ).group_by(models.Rating_Film.film_id).subquery()
 
     films = films.outerjoin(rating_subquery, rating_subquery.c.film_id == models.Film.id)
+    films = films.filter(models.Film.status == True)
 
     if search:
         films = films.filter(models.Film.title.ilike(f"%{search}%"))

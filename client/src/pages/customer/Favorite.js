@@ -103,7 +103,7 @@ function Favorite() {
                   <td className={`${Text}`}>{movie.production_year}</td>
                   <td className={`${Text}`}>{movie.length}</td>
                   <td className={`${Text} flex-rows gap-2 mt-2`}>
-                    <Link to={`/movies/${movie?.title}`} className='border border-white bg-subInfo flex-rows gap-2 text-white rounded py-1 px-2'>
+                    <Link to={`/movie/${movie?.title}`} className='border border-white bg-subInfo flex-rows gap-2 text-white rounded py-1 px-2'>
                       Watch <AiFillEye/>
                     </Link>
                     <button onClick={(e) => handleRemove(movie.id)} className='border border-white bg-subMain flex-rows gap-2 text-white rounded py-1 px-2'>
