@@ -51,8 +51,8 @@ function MovieInfo({
         if (hasMatchingPayment) {
           return false;
         }
-        return true;
       }
+      return true;
     };
     const flag = checkPayment();
     setIsNotValidPayment(flag);

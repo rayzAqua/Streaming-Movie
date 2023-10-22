@@ -92,7 +92,7 @@ function Register() {
         // await login(formData);
         // console.log(query);
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = "/login";
         }, 2000);
       }
     } catch (error) {
