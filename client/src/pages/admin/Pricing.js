@@ -92,7 +92,7 @@ function Pricing() {
             toast.success(response?.data.msg);
             getPricing();
           } else {
-            toast.error(response?.data?.message + "! Vui lòng thử lại");
+            toast.error(response?.data?.message + "! Please try again");
           }
         } catch (error) {
           console.error("Error when call API:", error);
@@ -120,7 +120,7 @@ function Pricing() {
               console.log(query);
             }
         else
-            toast.error(query?.data?.message + "! Vui lòng thử lại");
+            toast.error(query?.data?.message + "! Please try again");
           
         getPricing();
         
@@ -216,7 +216,7 @@ function Pricing() {
                         <div className="relative p-6 flex-auto">
                         <form className="shadow-md rounded px-8 pt-6 pb-8 w-full">
                             <label className="block text-dryGray text-sm font-medium mb-1">
-                            Genre Name
+                            Pricing Name
                             </label>
                             <input
                             value={pricing_name}

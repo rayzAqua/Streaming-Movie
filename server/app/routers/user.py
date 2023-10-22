@@ -18,7 +18,6 @@ router = APIRouter(prefix="/user", tags=["User"])
 async def create_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
-    current_user: int = Depends(oauth2.get_current_user),
 ):
     # Empty name validate
     if user.name == "":
@@ -31,7 +30,7 @@ async def create_user(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Email already exists"
         )
-    hashed_password = utils.hash(user.password)
+    hashed_password = await utils.hash(user.password)
     user.password = hashed_password
     new_user = models.User(**user.dict())
     db.add(new_user)
@@ -67,7 +66,7 @@ async def get_user(
 async def get_all_customer(
     db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
 ):
-    customer = db.query(models.User).filter(models.User.role == 1).all()
+    customer = db.query(models.User).filter(models.User.isAdmin == False).all()
     return customer
 
 
