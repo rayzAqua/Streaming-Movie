@@ -61,8 +61,9 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/movies" element={<MoviesPage />} />
+              <Route path="/movies/:id" element={<MoviesPage />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/movies/:id" element={<SingleMovie />} />
+              <Route path="/movie/:id" element={<SingleMovie />} />
               <Route path="/forgot-pass" element={<UserFogotPass />} />
               <Route path="/change-pass" element={<UserChangePass />} />
               <Route path="/verify-code" element={<Verify />} />

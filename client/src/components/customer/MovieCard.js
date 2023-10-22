@@ -34,7 +34,7 @@ function MovieCard({movie, favoriteFilm,setFavoriteFilm, user}) {
   return (
     <>
     <div className='border border-border p-1 hover:scale-95 transitions relative rounded overflow-hidden'>
-        <Link to={`/movies/${movie?.title}`} className='w-full'>
+        <Link to={`/movie/${movie?.title}`} className='w-full'>
             <img 
                 src={`${movie?.poster}`} 
                 alt={movie?.title} 

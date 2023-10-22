@@ -121,7 +121,7 @@ function TopRated() {
                   </button>
                   <Link
                     className="font-semibold text-xl trancuted line-clamp-2"
-                    to={`/movies/${movie.title}`}
+                    to={`/movie/${movie.title}`}
                   >
                     {movie.title}
                   </Link>
