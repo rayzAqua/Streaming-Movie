@@ -123,7 +123,7 @@ function Package() {
               </h1>
             </>
           )}
-          {!userPayment[0].pricing_name ? (
+          {!(userPayment.length > 0 && userPayment[0].pricing_name) ? (
             subPackages.map((pack) => (
               <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
                 <div

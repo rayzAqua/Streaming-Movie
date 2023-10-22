@@ -31,7 +31,7 @@ const RentMovieProvider = ({ children }) => {
       const storedRentData = localStorage.getItem("rentData");
       if (storedRentData) {
         setRentData(JSON.parse(storedRentData));
-        console.log("Đã khôi phục rentData từ localStorage");
+        // console.log("Đã khôi phục rentData từ localStorage");
       }
     }
   }, []);
