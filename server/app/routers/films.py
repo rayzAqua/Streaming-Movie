@@ -239,6 +239,36 @@ async def get_film(film_title: str, db: Session = Depends(get_db)):
         )
     return film
 
+@router.get('/search', response_model=List[schemas.FilmDetailOut])
+async def get_film(db: Session = Depends(get_db), search: Optional[str] = None, genre: Optional[int] = None, rate: Optional[int] = None, year: Optional[int] = None):
+
+    films = db.query(models.Film)
+    rating_subquery = db.query(
+        models.Rating_Film.film_id,
+        func.avg(models.Rating_Film.rate).label("avg_rating")
+    ).group_by(models.Rating_Film.film_id).subquery()
+
+    films = films.outerjoin(rating_subquery, rating_subquery.c.film_id == models.Film.id)
+
+    if search:
+        films = films.filter(models.Film.title.ilike(f"%{search}%"))
+
+    if rate is not None:
+        films = films.filter(rating_subquery.c.avg_rating >= rate)
+
+    if year is not None:
+        films = films.filter(models.Film.production_year == year)
+
+    if genre is not None:
+        films = films.filter(models.Film.genre_id == genre)
+
+    found_films = films.all()
+
+    if not found_films:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No films found")
+
+    return found_films
+
 
 @router.get("/topFavoriteFilms", response_model=List[schemas.FilmDetailOut])
 def get_top_favorite_films(db: Session = Depends(get_db)):

@@ -39,7 +39,7 @@ function AdminMovies() {
   const [productionYear, setProductionYear] = useState();
   const [decription, setDecription] = useState();
   const [price, setPrice] = useState();
-  const [genreID, setGenreID] = useState();
+  const [genreID, setGenreID] = useState(0);
   const [status, setStatus] = useState(true);
   const [id, setID] = useState();
 
@@ -314,7 +314,7 @@ function AdminMovies() {
       !video &&
       !length &&
       !decription &&
-      !genreID &&
+      genreID != 0 &&
       !price &&
       !productionYear
     ) {
@@ -323,6 +323,7 @@ function AdminMovies() {
     }
     console.log(photo);
     console.log(video);
+    console.log('genre',genreID);
     e.preventDefault();
     const payload = {
       title: film_name,
@@ -335,20 +336,31 @@ function AdminMovies() {
       genre_id: parseInt(genreID),
       status: JSON.parse(status),
     };
-    const query =
-      form === "add"
-        ? await axiosApiInstance.post(
-            axiosApiInstance.defaults.baseURL + `/films/create`,
-            payload
-          )
-        : await axiosApiInstance.put(
-            axiosApiInstance.defaults.baseURL + `/films/edit/${id}`,
-            payload
-          );
-    if (query?.status === 200 || query?.status === 201) {
-      toast.success(query?.data.msg);
-      getFilms();
-    } else toast.error(query?.data?.message + "! Vui lòng thử lại");
+    try {
+      const query =
+        form === "add"
+          ? await axiosApiInstance.post(
+              axiosApiInstance.defaults.baseURL + `/films/create`,
+              payload
+            )
+          : await axiosApiInstance.put(
+              axiosApiInstance.defaults.baseURL + `/films/edit/${id}`,
+              payload
+            );
+    
+      if (query?.status === 200 || query?.status === 201) {
+        toast.success(query?.data.msg);
+        getFilms();
+        
+      } else {
+        toast.error(query?.data?.message + "! Vui lòng thử lại");
+      }
+    } catch (error) {
+      // Xử lý lỗi ở đây
+      console.error("Có lỗi xảy ra: ", error);
+      // Hiển thị thông báo lỗi cho người dùng nếu cần
+      toast.error("Có lỗi xảy ra khi thực hiện tác vụ. Vui lòng thử lại sau.");
+    }
     setChange(!change);
     setShow(false);
     setName(null);
@@ -594,6 +606,7 @@ function AdminMovies() {
                         onChange={(e) => setGenreID(e.target.value)}
                         className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                       >
+                          <option key={0} value={0}>Choose genre</option>
                         {genre.map((g) => (
                           <option key={g.id} value={g.id}>
                             {g.name}
