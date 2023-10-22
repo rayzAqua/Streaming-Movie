@@ -106,7 +106,7 @@ function Package() {
     <Layout>
       <div className="bg-main">
         <div className="container px-6 py-8 mx-auto">
-          {!userPayment[0].pricing_name ? (
+          {!(userPayment.length > 0 && userPayment[0].pricing_name) ? (
             <>
               <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
                 Pricing Plan
