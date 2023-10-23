@@ -3,18 +3,25 @@ import { Link, NavLink } from "react-router-dom";
 import { FaSearch, FaHeart, FaAngleDown } from "react-icons/fa";
 import { CgUser } from "react-icons/cg";
 import { GiWallet } from "react-icons/gi";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import AuthContext from "../../context/AuthProvider";
 
 function NavBar() {
   const { logout } = useContext(AuthContext);
   const hover = "hover:text-subMain transitions text-white";
   const Hover = ({ isActive }) => (isActive ? "text-subMain" : hover);
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
   const handleOpen = () => {
     setOpen(!open);
   };
+
+  const handleSearch = (e) => {
+    console.log(search);
+    if(search) window.location.href = `/movies/${search}`;
+  };
+
   return (
     <>
       <div className="bg-main shadow-md sticky top-0 z-20">
@@ -32,10 +39,11 @@ function NavBar() {
 
           {/*search bar*/}
           <div className="col-span-3">
-            <form className="w-full lg:w-80 text-sm bg-dryGray rounded flex-btn gap-4">
+            <div className="w-full lg:w-80 text-sm bg-dryGray rounded flex-btn gap-4">
               <button
-                type="submit"
                 className="bg-subMain w-12 flex-colo h-12 rounded text-white"
+                type="button"
+                onClick={handleSearch}
               >
                 <FaSearch />
               </button>
@@ -43,8 +51,9 @@ function NavBar() {
                 type="text"
                 placeholder="Search Movie Name from here"
                 className="font-medium placeholder:text-border text-sm w-11/12 h-12 bg-transparent border-none px-2 text-black"
+                onChange={(e)=> setSearch(e.target.value)}
               />
-            </form>
+            </div>
           </div>
 
           {/*Menu*/}
