@@ -265,9 +265,6 @@ async def get_film(db: Session = Depends(get_db), search: Optional[str] = None, 
 
     found_films = films.all()
 
-    if not found_films:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No films found")
-
     return found_films
 
 
