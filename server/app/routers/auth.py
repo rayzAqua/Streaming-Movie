@@ -193,16 +193,13 @@ async def verify(
             )
         except ExpiredSignatureError:
             # Nếu JWT đã hết hẹn thì truy vấn đến verify token trong db.
-            # Mục đích: Mỗi verify link chỉ đc mở form resend-email một lần duy nhất.
-            on_delete_token = (
+            # Mục đích: Mỗi verify link chỉ đc mở form resend-email một lần duy nhất, nếu lỡ tắt link mới nhất thì đc mở lại.
+            on_check = (
                 db.query(models.Token)
                 .filter(models.Token.token == verify_token)
                 .first()
             )
-            # Nếu truy vấn mà có tồn tại token thì xoá token cũ đi và gửi link tạo mới.
-            if on_delete_token:
-                db.delete(on_delete_token)
-
+            if on_check and on_check.token == verify_token:
                 html_content = """
                             <html>
                                 <head>
@@ -251,14 +248,44 @@ async def verify(
                                     <form id="email-form">
                                         <p id="response-message"></p>
                                         <input type="email" id="email" name="email" required>
-                                        <button type="button" onclick="sendEmail()">Resend Email</button>
+                                        <button type="button" onclick="sendEmail()" id="resend-button">Resend Email</button>
+                                        <div id="countdown-timer"></div>
                                     </form>
 
                                     <script>
+                                        let isResendButtonDisabled = false;
+                                        let countdownSeconds = 120;
+                                        let countdownInterval;
+
+                                        function updateCountdownTimer(countdownTimer) {
+
+                                            // Hiển thị thời gian đếm ngược dưới dạng phút và giây
+                                            const minutes = Math.floor(countdownSeconds / 60);
+                                            const seconds = countdownSeconds % 60;
+                                            countdownTimer.textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+                                        }
+                                        
+                                        function disableResendButton() {
+                                            isResendButtonDisabled = true;
+                                            const resendButton = document.getElementById("resend-button");
+                                            resendButton.disabled = true;
+                                        }
+    
+                                        function enableResendButton() {
+                                            isResendButtonDisabled = false;
+                                            const resendButton = document.getElementById("resend-button");
+                                            resendButton.disabled = false;
+                                        }
+                                        
                                         function sendEmail() {
+                                            if (isResendButtonDisabled) {
+                                                return;
+                                            }
+                                            
                                             const emailInput = document.getElementById("email");
                                             const emailValue = emailInput.value;
                                             const responseMessage = document.getElementById("response-message");
+                                            const countdownTimer = document.getElementById("countdown-timer");
 
                                             if (!emailValue || emailValue === "") {
                                                 responseMessage.textContent = "Email is required";
@@ -266,9 +293,20 @@ async def verify(
                                             } else {
                                                 responseMessage.textContent = "";
                                             }
-                                           
+                                            
+                                            const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+
+                                            if (!emailPattern.test(emailValue)) {
+                                                responseMessage.textContent = "Invalid email format";
+                                                return;
+                                            } else {
+                                                responseMessage.textContent = "";
+                                            }
+                                                                                                                                 
                                             const formData = { email: emailValue };
 
+                                            disableResendButton()
+                                            
                                             fetch("/resend-email", {
                                                 method: "POST",
                                                 headers: {
@@ -280,9 +318,26 @@ async def verify(
                                             .then(data => {
                                                 if (data.success === true) {
                                                     responseMessage.textContent = `${data.msg}`;
+                                                    clearInterval(countdownInterval); // Dừng đếm ngược hiện tại
+                                                    countdownSeconds = 120; // Reset thời gian đếm ngược
+                                                    // disableResendButton(); // Cho phép nhấn lại
+                                                    updateCountdownTimer(countdownTimer);
+                                                    countdownInterval = setInterval(() => {
+                                                        countdownSeconds--;
+                                                        console.log(countdownSeconds--)
+
+                                                        if (countdownSeconds <= 1) {
+                                                            enableResendButton()
+                                                            countdownTimer.textContent = "";
+                                                            clearInterval(countdownInterval);
+                                                        } else {
+                                                            updateCountdownTimer(countdownTimer);
+                                                        }
+                                                    }, 1000);
                                                 } else {
                                                     responseMessage.textContent = `Resend failed: ${data.detail}`;
-                                                }                                  
+                                                    enableResendButton(); // Cho phép nhấn lại
+                                                }                           
                                             })
                                             .catch(error => {
                                                 console.error("Error:", error);
@@ -293,12 +348,9 @@ async def verify(
                             </html>
                             """
 
-                db.commit()
-
                 return HTMLResponse(content=html_content)
-            # Nếu không tồn tại verify token thì link không hợp lệ.
             else:
-                return HTMLResponse(content="""<h1>Invalid Link.</h1>""")
+                return HTMLResponse(content="<h2>Invalid Link</h2>")
 
         # Kiểm tra user từ user_data
         user_query = db.query(models.User).filter(
@@ -363,9 +415,11 @@ async def resendEmail(
             db.query(models.Token).filter(models.Token.user_id == user.id).first()
         )
         if isExistedToken:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Email was sent."
-            )
+            db.delete(isExistedToken)
+            db.commit()
+            # raise HTTPException(
+            #     status_code=status.HTTP_409_CONFLICT, detail="Email was sent."
+            # )
 
         # Send verify email
         await sendVerifyEmail(dbSession=db, userData=user)

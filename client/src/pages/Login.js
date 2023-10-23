@@ -15,6 +15,7 @@ function LoginPage() {
   const [loginMsgOut, setLoginMsgOut] = useState("");
 
   const [pwdShown, setPwdShown] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const togglePassword = () => {
     setPwdShown(!pwdShown);
@@ -52,9 +53,12 @@ function LoginPage() {
     formData.append("password", password);
 
     try {
+      setLoading(true);
       await login(formData);
       setLoginMsgOut("");
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       setLoginMsgOut("EMAIL OR PASSWORD IS INCORRECT");
     }
   };
@@ -108,10 +112,11 @@ function LoginPage() {
           <span className="text-subMain">{loginMsgOut}</span>
           <button
             type="button"
+            disabled={loading}
             onClick={handleLogin}
             className="bg-subMain transitions hover:bg-main flex-rows gap-4 text-white py-4 rounded-lg w-full"
           >
-            <FiLogIn /> Sign In
+            <FiLogIn /> {loading ? "Loading" : `Sign In`}
           </button>
           <p className="text-center text-border">
             Don't have an account?{" "}
