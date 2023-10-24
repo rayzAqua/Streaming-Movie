@@ -16,10 +16,17 @@ function Package() {
   const [subPackages, setPackages] = useState([]);
   const { user } = useContext(AuthContext);
   const [rentData, setRentData] = useRentMovieContext();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Get package
   useEffect(() => {
+    const packageRentData = JSON.parse(localStorage.getItem("rentData"));
+
+    if (packageRentData && packageRentData.package_name) {
+      navigate("/payment");
+    }
+
     const getPricing = async () => {
       try {
         const res = await axios.get(
@@ -55,6 +62,7 @@ function Package() {
       const packagePrice = e.currentTarget.getAttribute("data-price");
 
       console.log(packageId);
+      setLoading(true);
       const res = await axiosApiInstance.post(
         `/payment/forPackage/${packageId}`
       );
@@ -79,6 +87,7 @@ function Package() {
         }
       }
     } catch (error) {
+      setLoading(false);
       if (error.response && error.response.status === 404) {
         toast.error(error.response.data.detail);
       } else if (error.response && error.response.status === 409) {

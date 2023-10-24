@@ -164,7 +164,7 @@ function SingleMovie() {
                   </p>
 
                   <h2 class="text-5xl font-bold text-white uppercase dark:text-gray-100">
-                    {movie.price} VND
+                    {movie.price.toLocaleString("VN-vi")} VND
                   </h2>
 
                   <p class="font-medium text-xl text-gray-200">For 1 day</p>
@@ -193,7 +193,7 @@ function SingleMovie() {
                   </p>
 
                   <h2 class="text-5xl font-bold text-white uppercase dark:text-gray-100">
-                    {movie.price * 2} VND
+                    {(movie.price * 2).toLocaleString("VN-vi")} VND
                   </h2>
 
                   <p class="font-medium text-xl text-gray-200">For 2 days</p>
@@ -222,7 +222,7 @@ function SingleMovie() {
                   </p>
 
                   <h2 class="text-5xl font-bold text-white uppercase dark:text-gray-100">
-                    {movie.price * 3} VND
+                    {(movie.price * 3).toLocaleString("VN-vi")} VND
                   </h2>
 
                   <p class="font-medium text-xl text-gray-200">For 3 days</p>

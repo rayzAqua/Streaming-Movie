@@ -166,7 +166,7 @@ async def add_payment_for_package(
 async def get_all_payment(
     db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
 ):
-    query = (
+    payments = (
         db.query(
             models.Payment.id.label("id"),
             models.User.email.label("user_email"),
@@ -183,7 +183,21 @@ async def get_all_payment(
         .all()
     )
 
-    return query
+    all_payment = [
+        {
+            "id": payment.id,
+            "user_email": payment.user_email,
+            "pricing_name": payment.pricing_name,
+            "film_name": payment.film_name,
+            "pay": payment.pay,
+            "status": payment.status,
+            "created_at": payment.created_at,
+            "end_date": payment.end_date,
+        }
+        for payment in payments
+    ]
+
+    return all_payment
 
 
 @router.get("/getNewestPayment")

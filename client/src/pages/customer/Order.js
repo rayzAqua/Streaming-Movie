@@ -10,6 +10,7 @@ import { getUserPayment } from "../../api/utils";
 const Order = () => {
   const navigate = useNavigate();
   const [rentData, setRentData] = useRentMovieContext();
+  const [loading, setLoading] = useState(false);
 
   // Payment data
   const [paymentData, setPaymentData] = useState(() => {
@@ -57,7 +58,7 @@ const Order = () => {
               localStorage.removeItem("rentData");
               await getUserPayment();
               if (rentData.movie_title) {
-                window.location.href = `/movies/${rentData.movie_title}`;
+                window.location.href = `/movie/${rentData.movie_title}`;
               } else {
                 window.location.href = `/package`;
               }
@@ -69,7 +70,7 @@ const Order = () => {
           localStorage.removeItem("rentData");
           setTimeout(() => {
             if (rentData.movie_title) {
-              window.location.href = `/movies/${rentData.movie_title}`;
+              window.location.href = `/movie/${rentData.movie_title}`;
             } else {
               window.location.href = `/package`;
             }
@@ -94,6 +95,7 @@ const Order = () => {
   const handleCancel = async () => {
     try {
       if (paymentData) {
+        setLoading(true);
         const res = await axiosApiInstance.delete(
           `${axios.defaults.baseURL}/payment/delete/${paymentData.order_id}`,
           paymentData
@@ -104,7 +106,7 @@ const Order = () => {
           localStorage.removeItem("rentData");
           toast.warning(`${res.data.msg}. Waiting for redirect.`);
           if (rentData.movie_title) {
-            window.location.href = `/movies/${rentData.movie_title}`;
+            window.location.href = `/movie/${rentData.movie_title}`;
           } else {
             window.location.href = `/package`;
           }
@@ -113,7 +115,7 @@ const Order = () => {
           localStorage.removeItem("rentData");
           setTimeout(() => {
             if (rentData.movie_title) {
-              window.location.href = `/movies/${rentData.movie_title}`;
+              window.location.href = `/movie/${rentData.movie_title}`;
             } else {
               window.location.href = `/package`;
             }
@@ -121,8 +123,10 @@ const Order = () => {
         }
       } else {
         toast.error("Invalid payment infomation.");
+        setLoading(false);
       }
     } catch (error) {
+      setLoading(false);
       if (error.response && error.response.status === 404) {
         toast.error(error.response.data.detail);
       } else if (error.response && error.response.status === 422) {
@@ -208,6 +212,7 @@ const Order = () => {
                 <button
                   onClick={handleSubmit}
                   className="bg-subMain transitions hover:bg-main flex-rows gap-4 text-white py-4 rounded-lg w-full"
+                  disabled={loading}
                 >
                   Payment
                 </button>
@@ -215,6 +220,7 @@ const Order = () => {
                 <button
                   onClick={handleCancel}
                   className="bg-darkBlue transitions hover:bg-main flex-rows gap-4 text-white py-4 rounded-lg w-full mt-4"
+                  disabled={loading}
                 >
                   Cancel
                 </button>
