@@ -239,16 +239,28 @@ async def get_film(film_title: str, db: Session = Depends(get_db)):
         )
     return film
 
-@router.get('/search', response_model=List[schemas.FilmDetailOut])
-async def get_film(db: Session = Depends(get_db), search: Optional[str] = None, genre: Optional[int] = None, rate: Optional[int] = None, year: Optional[int] = None):
 
+@router.get("/search", response_model=List[schemas.FilmDetailOut])
+async def get_film(
+    db: Session = Depends(get_db),
+    search: Optional[str] = None,
+    genre: Optional[int] = None,
+    rate: Optional[int] = None,
+    year: Optional[int] = None,
+):
     films = db.query(models.Film)
-    rating_subquery = db.query(
-        models.Rating_Film.film_id,
-        func.avg(models.Rating_Film.rate).label("avg_rating")
-    ).group_by(models.Rating_Film.film_id).subquery()
+    rating_subquery = (
+        db.query(
+            models.Rating_Film.film_id,
+            func.avg(models.Rating_Film.rate).label("avg_rating"),
+        )
+        .group_by(models.Rating_Film.film_id)
+        .subquery()
+    )
 
-    films = films.outerjoin(rating_subquery, rating_subquery.c.film_id == models.Film.id)
+    films = films.outerjoin(
+        rating_subquery, rating_subquery.c.film_id == models.Film.id
+    )
     films = films.filter(models.Film.status == True)
 
     if search:
@@ -264,6 +276,7 @@ async def get_film(db: Session = Depends(get_db), search: Optional[str] = None, 
         films = films.filter(models.Film.genre_id == genre)
 
     found_films = films.all()
+    print(found_films)
 
     return found_films
 
