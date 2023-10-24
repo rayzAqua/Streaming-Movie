@@ -104,18 +104,31 @@ async def update_profile(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    user_query = db.query(models.User).filter(models.User.id == current_user.id)
-    user = user_query.first()
+    try:
+        user_query = db.query(models.User).filter(models.User.id == current_user.id)
+        user = user_query.first()
 
-    if user == None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+            )
+
+        if len(edit_user.name) > 32:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Name is too long"
+            )
+
+        update_data = {"name": edit_user.name}
+        user_query.update(update_data, synchronize_session=False)  # type: ignore
+        db.commit()
+
+        update_user = user_query.first()
+
+        return {"success": True, "msg": "Edit profile success", "update": update_user}
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
         )
-
-    user_query.update(edit_user.dict(), synchronize_session=False)  # type: ignore
-    db.commit()
-
-    return {"msg": "Edit profile success"}
 
 
 @router.put("/changePass")
@@ -124,20 +137,41 @@ async def change_pass(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    user_query = db.query(models.User).filter(models.User.id == current_user.id)
-    user = user_query.first()
+    try:
+        user_query = db.query(models.User).filter(models.User.id == current_user.id)
+        user = user_query.first()
 
-    if user == None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+            )
+
+        if not await utils.verify(edit_user.curr_pass, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Wrong current password"
+            )
+
+        if len(edit_user.password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail=f"Password is too short"
+            )
+
+        if edit_user.curr_pass == edit_user.password:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"New password must be diffirent old password",
+            )
+
+        hashed_password = await utils.hash(edit_user.password)
+        update_data = {"password": hashed_password}
+        user_query.update(update_data, synchronize_session=False)  # type: ignore
+        db.commit()
+
+        return {"success": True, "msg": "Change password success"}
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
         )
-
-    hashed_password = await utils.hash(edit_user.password)
-    edit_user.password = hashed_password
-    user_query.update(edit_user.dict(), synchronize_session=False)  # type: ignore
-    db.commit()
-
-    return {"msg": "Change password success"}
 
 
 # END PUT

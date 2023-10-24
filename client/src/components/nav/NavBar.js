@@ -95,7 +95,11 @@ function NavBar() {
             <NavLink to="/favorite" className={`${Hover} relative`}>
               <FaHeart className="w-6 h-6 hover:text-subMain" />
               <div className="w-5 h-5 flex-colo rounded-full text-xs bg-subMain text-white absolute -top-2 -right-3">
-                {favorites.length > 0 ? favorites.length : 0}
+                {favorites.length > 0
+                  ? favorites.length >= 100
+                    ? `99+`
+                    : favorites.length
+                  : 0}
               </div>
             </NavLink>
             <NavLink to="/package" className={`${Hover} relative`}>

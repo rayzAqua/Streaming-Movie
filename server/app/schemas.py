@@ -50,6 +50,7 @@ class EditProfile(BaseModel):
 
 
 class EditPassword(BaseModel):
+    curr_pass: str
     password: str
 
 
