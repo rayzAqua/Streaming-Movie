@@ -1,17 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { FaSearch, FaHeart, FaAngleDown } from "react-icons/fa";
 import { CgUser } from "react-icons/cg";
 import { GiWallet } from "react-icons/gi";
 import { useContext, useState } from "react";
 import AuthContext from "../../context/AuthProvider";
+import axiosApiInstance from "../../context/intercepter";
 
 function NavBar() {
   const { logout } = useContext(AuthContext);
   const hover = "hover:text-subMain transitions text-white";
   const Hover = ({ isActive }) => (isActive ? "text-subMain" : hover);
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   const handleOpen = () => {
     setOpen(!open);
@@ -19,8 +20,29 @@ function NavBar() {
 
   const handleSearch = (e) => {
     console.log(search);
-    if(search) window.location.href = `/movies/${search}`;
+    if (search) window.location.href = `/movies/${search}`;
   };
+
+  const [favorites, setFavorites] = useState([]);
+  const { user } = useContext(AuthContext);
+
+  const getFavorite = async () => {
+    try {
+      const response = await axiosApiInstance.get(
+        axiosApiInstance.defaults.baseURL + `/films/getFavoriteFilms`
+      );
+      setFavorites(response.data);
+    } catch (error) {
+      setFavorites([]);
+      console.error("Error fetching favorite films:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      getFavorite();
+    }
+  }, []);
 
   return (
     <>
@@ -51,7 +73,7 @@ function NavBar() {
                 type="text"
                 placeholder="Search Movie Name from here"
                 className="font-medium placeholder:text-border text-sm w-11/12 h-12 bg-transparent border-none px-2 text-black"
-                onChange={(e)=> setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
@@ -73,7 +95,11 @@ function NavBar() {
             <NavLink to="/favorite" className={`${Hover} relative`}>
               <FaHeart className="w-6 h-6 hover:text-subMain" />
               <div className="w-5 h-5 flex-colo rounded-full text-xs bg-subMain text-white absolute -top-2 -right-3">
-                5
+                {favorites.length > 0
+                  ? favorites.length >= 100
+                    ? `99+`
+                    : favorites.length
+                  : 0}
               </div>
             </NavLink>
             <NavLink to="/package" className={`${Hover} relative`}>

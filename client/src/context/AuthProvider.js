@@ -53,7 +53,7 @@ export const AuthContextProvider = ({ children }) => {
     localStorage.removeItem("rentData");
     setTimeout(() => {
       window.location.href = "/login";
-    }, 2000);
+    }, 500);
   };
 
   return (
