@@ -29,9 +29,7 @@ export const AuthContextProvider = ({ children }) => {
       if (apiResponse && apiResponse.data.success) {
         localStorage.setItem("tokens", JSON.stringify(apiResponse.data.user));
         toast.success("Login successfuly!");
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 2000);
+        window.location.href = "/";
       } else {
         toast.warning(apiResponse.data.msg);
       }
