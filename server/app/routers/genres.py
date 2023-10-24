@@ -33,7 +33,17 @@ async def create_genre(
 @router.get("/getAll", response_model=List[schemas.GenreOut])
 async def get_all_genres(db: Session = Depends(get_db)):
     genres = db.query(models.Genre).all()
+
     return genres
+
+
+@router.get("/getAllForSearch")
+async def allGenres(db: Session = Depends(get_db)):
+    genres = db.query(models.Genre).all()
+
+    data = [{"title": genre.name, "value": genre.id} for genre in genres]
+
+    return data
 
 
 @router.get("/get/{genre_id}", response_model=schemas.GenreOut)
