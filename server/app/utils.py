@@ -62,7 +62,7 @@ async def sendVerifyEmail(dbSession, userData):
     url = f"{settings.base_url}/verify/{new_user_token}/{new_verify_token}"
 
     # Gửi mail
-    html = f"<p>Here is your verify link: {url}</p>"
+    html = f"<p>Here is your verify link: {url}. Link will expired in 2 minutes</p>"
     message = MessageSchema(
         subject="Verify Email",
         recipients=[userData.email],
@@ -88,7 +88,7 @@ async def sendConfirmCodeEmail(email):
         "expiration_time": expire_time,
     }
     # Gửi mail
-    html = f"<p>Here is your code: <span>{confirm_code}</span></p>"
+    html = f"<p>Here is your code: <span>{confirm_code}</span>. Code will expired in 2 minutes</p>"
     message = MessageSchema(
         subject="Confirm Your Email",
         recipients=[email],

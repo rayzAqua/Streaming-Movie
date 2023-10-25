@@ -293,9 +293,7 @@ async def getActivePayment(
         payment = query.first()
 
         if not payment:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Bill isn't existing."
-            )
+            return {"success": False, "isCancel": True, "msg": "Order is cancel."}
 
         if payment.status == 0:
             return {"success": False, "msg": "Order isn't payment."}
