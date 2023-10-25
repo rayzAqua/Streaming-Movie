@@ -319,13 +319,13 @@ function AdminMovies() {
       toast.error("Error empty entity");
       return;
     }
-    if(!photo || !video){
+    if (!photo || !video) {
       toast.error("Please upload video film or poster film");
       return;
     }
     console.log(photo);
     console.log(video);
-    console.log('genre',genreID);
+    console.log("genre", genreID);
     e.preventDefault();
     const payload = {
       title: film_name,
@@ -349,11 +349,10 @@ function AdminMovies() {
               axiosApiInstance.defaults.baseURL + `/films/edit/${id}`,
               payload
             );
-    
+
       if (query?.status === 200 || query?.status === 201) {
         toast.success(query?.data.msg);
         getFilms();
-        
       } else {
         toast.error(query?.data?.message + "! Vui lòng thử lại");
       }
@@ -579,7 +578,7 @@ function AdminMovies() {
                         onChange={(e) => setPrice(e.target.value)}
                         className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                       />
-                      <label className="block text-dryGray text-sm font-medium mb-1">
+                      <label className="block tsext-dryGray text-sm font-medium mb-1">
                         Video
                       </label>
                       <div>
@@ -608,7 +607,9 @@ function AdminMovies() {
                         onChange={(e) => setGenreID(e.target.value)}
                         className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                       >
-                          <option key={0} value={0}>Choose genre</option>
+                        <option key={0} value={0}>
+                          Choose genre
+                        </option>
                         {genre.map((g) => (
                           <option key={g.id} value={g.id}>
                             {g.name}
