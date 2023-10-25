@@ -51,7 +51,7 @@ export const AuthContextProvider = ({ children }) => {
     setUser(null);
     const data = JSON.parse(localStorage.getItem("rentData"));
 
-    if (data) {
+    if (data.order_id) {
       const res = await axiosApiInstance.delete(
         `${axios.defaults.baseURL}/payment/delete/${data.order_id}`
       );
