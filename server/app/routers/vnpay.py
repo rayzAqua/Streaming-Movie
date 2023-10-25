@@ -206,6 +206,7 @@ def payment_return(
 
                 db.delete(payment)
                 db.commit()
+
                 return HTMLResponse(
                     content=f"""
                             <html>
