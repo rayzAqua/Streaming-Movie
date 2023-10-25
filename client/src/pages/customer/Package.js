@@ -114,89 +114,97 @@ function Package() {
   return (
     <Layout>
       <div className="bg-main">
-        <div className="container px-6 py-8 mx-auto">
-          {!userPayment && (
-            <>
-              <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
-                Pricing Plan
-              </h1>
+        {subPackages && subPackages.length > 0 ? (
+          <div className="container px-6 py-8 mx-auto">
+            {!userPayment ||
+              (userPayment.length === 0 && (
+                <>
+                  <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
+                    Pricing Plan
+                  </h1>
 
-              <p className="max-w-2xl mx-auto mt-4 text-center text-dryGray xl:mt-6 dark:text-gray-300">
-                Register package for watching unlimited our Movies on NetMovie
-              </p>
-            </>
-          )}
-          {userPayment &&
-            userPayment.length > 0 &&
-            userPayment[0].pricing_name && (
-              <>
-                <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
-                  Your Register
-                </h1>
-              </>
-            )}
-          {!(
-            userPayment &&
-            userPayment.length > 0 &&
-            userPayment[0].pricing_name
-          ) ? (
-            subPackages.map((pack) => (
+                  <p className="max-w-2xl mx-auto mt-4 text-center text-dryGray xl:mt-6 dark:text-gray-300">
+                    Register package for watching unlimited our Movies on
+                    NetMovie
+                  </p>
+                </>
+              ))}
+            {userPayment &&
+              userPayment.length > 0 &&
+              userPayment[0].pricing_name && (
+                <>
+                  <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
+                    Your Register
+                  </h1>
+                </>
+              )}
+            {!(
+              userPayment &&
+              userPayment.length > 0 &&
+              userPayment[0].pricing_name
+            ) ? (
+              subPackages.map((pack) => (
+                <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
+                  <div
+                    key={pack.id}
+                    className="w-full p-8 space-y-8 text-center bg-blue-600 rounded-lg"
+                  >
+                    <p className="font-medium text-gray-200 uppercase">
+                      {pack.name}
+                    </p>
+
+                    <h2 className="text-5xl font-bold text-white uppercase dark:text-gray-100">
+                      {`${pack.price.toLocaleString("VN-vi")} VND`}
+                    </h2>
+
+                    <p className="font-medium text-xl text-gray-200">
+                      For {pack.days} {"days"}
+                    </p>
+                    {user ? (
+                      <button
+                        type="button"
+                        onClick={handleBtn}
+                        key={pack.id}
+                        data-id={pack.id}
+                        data-name={pack.name}
+                        data-price={pack.price}
+                        className="block w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
+                      >
+                        Register Now
+                      </button>
+                    ) : (
+                      <button
+                        key={pack.id}
+                        onClick={handleLogin}
+                        className="w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
+                      >
+                        Register Now
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
               <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
-                <div
-                  key={pack.id}
-                  className="w-full p-8 space-y-8 text-center bg-blue-600 rounded-lg"
-                >
+                <div className="col-span-full w-5/12 p-8 space-y-8 text-center bg-green-600 rounded-lg mt-5 mx-auto mb-5">
                   <p className="font-medium text-gray-200 uppercase">
-                    {pack.name}
+                    {userPayment[0].pricing_name}
                   </p>
-
-                  <h2 className="text-5xl font-bold text-white uppercase dark:text-gray-100">
-                    {`${pack.price.toLocaleString("VN-vi")} VND`}
-                  </h2>
-
                   <p className="font-medium text-xl text-gray-200">
-                    For {pack.days} {"days"}
+                    Duration: {daysLeft} {"days"}
                   </p>
-                  {user ? (
-                    <button
-                      type="button"
-                      onClick={handleBtn}
-                      key={pack.id}
-                      data-id={pack.id}
-                      data-name={pack.name}
-                      data-price={pack.price}
-                      className="block w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
-                    >
-                      Register Now
-                    </button>
-                  ) : (
-                    <button
-                      key={pack.id}
-                      onClick={handleLogin}
-                      className="w-full px-4 py-2 mt-10 tracking-wide text-blue-500 capitalize transition-colors duration-300 transform bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring focus:ring-gray-200 focus:ring-opacity-80"
-                    >
-                      Register Now
-                    </button>
-                  )}
+                  <p className="max-w-2xl mx-auto mt-4 text-center text-dryGray xl:mt-6 dark:text-gray-300">
+                    Wishing you a great movie-watching experience at NetMovie
+                  </p>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
-              <div className="col-span-full w-5/12 p-8 space-y-8 text-center bg-green-600 rounded-lg mt-5 mx-auto mb-5">
-                <p className="font-medium text-gray-200 uppercase">
-                  {userPayment[0].pricing_name}
-                </p>
-                <p className="font-medium text-xl text-gray-200">
-                  Duration: {daysLeft} {"days"}
-                </p>
-                <p className="max-w-2xl mx-auto mt-4 text-center text-dryGray xl:mt-6 dark:text-gray-300">
-                  Wishing you a great movie-watching experience at NetMovie
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl mt-52 mb-52">
+            Not Found
+          </h1>
+        )}
       </div>
     </Layout>
   );
