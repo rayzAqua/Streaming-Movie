@@ -176,6 +176,50 @@ def payment_return(
                             </html>
                         """
                 )
+            elif vnp_ResponseCode == "24":
+                query = db.query(models.Payment).filter(
+                    and_(models.Payment.id == order_id, models.Payment.pay == amount)
+                )
+                payment = query.first()
+                if not payment:
+                    return HTMLResponse(
+                        content="""
+                            <html>
+                                <body>
+                                    <h1>Payment Information Error</h1>
+                                    <p>Payment information isn't correct.</p>
+                                </body>
+                            </html>
+                        """
+                    )
+                if payment.status == 1:
+                    return HTMLResponse(
+                        content="""
+                            <html>
+                                <body>
+                                    <h1>Payment Already Updated</h1>
+                                    <p>Payment has already been updated.</p>
+                                </body>
+                            </html>
+                        """
+                    )
+
+                db.delete(payment)
+                db.commit()
+                return HTMLResponse(
+                    content=f"""
+                            <html>
+                                <body>
+                                    <h1>Cancel Payment</h1>
+                                    <p>Payment with order ID: {order_id}.</p>
+                                    <p>Amount: {amount}</p>
+                                    <p>Order Description: {order_desc}</p>
+                                    <p>Transaction Number: {vnp_TransactionNo}</p>
+                                    <p>Response Code: {vnp_ResponseCode}</p>
+                                </body>
+                            </html>
+                         """
+                )
             else:
                 return HTMLResponse(
                     content=f"""

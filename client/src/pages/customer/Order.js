@@ -53,7 +53,7 @@ const Order = () => {
               `${axios.defaults.baseURL}/payment/checkPaymentSuccess/${orderId}`
             );
             if (check && check.data.success) {
-              toast.success(res.data.msg);
+              toast.success(check.data.msg);
               clearInterval(checkInterval);
               localStorage.removeItem("rentData");
               await getUserPayment();
@@ -61,6 +61,19 @@ const Order = () => {
                 window.location.href = `/movie/${rentData.movie_title}`;
               } else {
                 window.location.href = `/package`;
+              }
+            } else {
+              if (check.data.isCancel) {
+                console.log(check);
+                clearInterval(checkInterval);
+                localStorage.removeItem("rentData");
+                if (rentData.movie_title) {
+                  window.location.href = `/movie/${rentData.movie_title}`;
+                } else {
+                  window.location.href = `/package`;
+                }
+              } else {
+                console.log(check.data.msg);
               }
             }
           }, 5000);
