@@ -108,9 +108,9 @@ function Payment() {
                   <th scope="col" className={`${Head}`}>
                     Status
                   </th>
-                  <th scope="col" className={`${Head}`}>
+                  {/* <th scope="col" className={`${Head}`}>
                     Action
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="bg-main divide-y divide-gray-800">
@@ -137,7 +137,7 @@ function Payment() {
                     <td className={`${Text}`}>
                       {payment.status == 0 ? "Had not pay" : "Paid"}
                     </td>
-                    <td className={`${Text} flex-rows gap-2 mt-2`}>
+                    {/* <td className={`${Text} flex-rows gap-2 mt-2`}>
                       <button
                         type="button"
                         data-id={payment.id}
@@ -152,7 +152,7 @@ function Payment() {
                           <BsFillCheckCircleFill className="w-6 h-6" />
                         )}
                       </button>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

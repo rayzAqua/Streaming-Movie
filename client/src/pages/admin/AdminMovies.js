@@ -309,16 +309,18 @@ function AdminMovies() {
 
   const handleSubmit = async (e) => {
     if (
-      !film_name &&
-      !photo &&
-      !video &&
-      !length &&
-      !decription &&
-      genreID != 0 &&
-      !price &&
+      !film_name ||
+      !length ||
+      !decription ||
+      genreID == 0 ||
+      !price ||
       !productionYear
     ) {
       toast.error("Error empty entity");
+      return;
+    }
+    if(!photo || !video){
+      toast.error("Please upload video film or poster film");
       return;
     }
     console.log(photo);
