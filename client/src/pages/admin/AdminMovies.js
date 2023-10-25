@@ -323,6 +323,18 @@ function AdminMovies() {
       toast.error("Please upload video film or poster film");
       return;
     }
+    if(price<=0){
+      toast.error("Error price must be positive number");
+      return;
+    }
+    if(productionYear<1900){
+      toast.error("Production year must over 1900");
+      return;
+    }
+    if(length<=0){
+      toast.error("Film Length must be positive number");
+      return;
+    }
     console.log(photo);
     console.log(video);
     console.log("genre", genreID);
