@@ -50,7 +50,7 @@ function MoviesPage() {
         const response = await axios.get("/genres/getAllForSearch");
         // Kiểm tra nếu response.status là 200 (OK) trước khi trích xuất dữ liệu
         if (response.status === 200) {
-          setGenreData(response.data);
+          setGenreData([genres, ...response.data]);
           console.log(response.data);
         }
       } catch (error) {
