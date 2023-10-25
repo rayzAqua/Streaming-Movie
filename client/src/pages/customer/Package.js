@@ -107,7 +107,7 @@ function Package() {
   };
 
   const currentTime = new Date();
-  const endTime = new Date(userPayment[0]?.end_date);
+  const endTime = userPayment ? new Date(userPayment[0]?.end_date) : null;
   const timeLeftInSeconds = (endTime - currentTime) / 1000;
   const daysLeft = Math.floor(timeLeftInSeconds / (60 * 60 * 24));
 
@@ -115,7 +115,7 @@ function Package() {
     <Layout>
       <div className="bg-main">
         <div className="container px-6 py-8 mx-auto">
-          {!(userPayment.length > 0 && userPayment[0].pricing_name) ? (
+          {!userPayment && (
             <>
               <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
                 Pricing Plan
@@ -125,14 +125,21 @@ function Package() {
                 Register package for watching unlimited our Movies on NetMovie
               </p>
             </>
-          ) : (
-            <>
-              <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
-                Your Register
-              </h1>
-            </>
           )}
-          {!(userPayment.length > 0 && userPayment[0].pricing_name) ? (
+          {userPayment &&
+            userPayment.length > 0 &&
+            userPayment[0].pricing_name && (
+              <>
+                <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
+                  Your Register
+                </h1>
+              </>
+            )}
+          {!(
+            userPayment &&
+            userPayment.length > 0 &&
+            userPayment[0].pricing_name
+          ) ? (
             subPackages.map((pack) => (
               <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
                 <div

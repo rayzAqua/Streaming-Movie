@@ -2,6 +2,7 @@ import axios from "../api/axios";
 import { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import axiosApiInstance from "./intercepter";
 
 export const AuthContext = createContext();
 
@@ -48,9 +49,24 @@ export const AuthContextProvider = ({ children }) => {
 
   const logout = async () => {
     setUser(null);
+    const data = JSON.parse(localStorage.getItem("rentData"));
+
+    const res = await axiosApiInstance.delete(
+      `${axios.defaults.baseURL}/payment/delete/${data.order_id}`
+    );
+    if (data) {
+      if (res && res.data.success) {
+        console.log(res.data.msg);
+        localStorage.removeItem("rentData");
+      } else {
+        localStorage.removeItem("rentData");
+      }
+    } else {
+      console.log("Invalid payment infomation.");
+    }
+
     localStorage.removeItem("tokens");
     localStorage.removeItem("payment");
-    localStorage.removeItem("rentData");
     setTimeout(() => {
       window.location.href = "/login";
     }, 500);
