@@ -16,7 +16,7 @@ from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional, Text, List
 from sqlalchemy.sql import text
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from sqlalchemy import desc
 
 
@@ -232,7 +232,12 @@ async def get_film(
 
 @router.get("/getFilm/{film_title}", response_model=schemas.FilmDetailOut)
 async def get_film(film_title: str, db: Session = Depends(get_db)):
-    film = db.query(models.Film).filter(models.Film.title == film_title).first()
+    film = (
+        db.query(models.Film)
+        .filter(models.Film.title == film_title)
+        .filter(models.Film.status == True)
+        .first()
+    )
     if not film:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Film does not exist"
@@ -295,7 +300,10 @@ def get_top_favorite_films(db: Session = Depends(get_db)):
     )
 
     top_favorite_films = (
-        db.query(models.Film).join(subquery, models.Film.id == subquery.c.film_id).all()
+        db.query(models.Film)
+        .join(subquery, models.Film.id == subquery.c.film_id)
+        .filter(models.Film.status == True)
+        .all()
     )
 
     return top_favorite_films
@@ -310,6 +318,7 @@ async def get_top_rated_films(db: Session = Depends(get_db)):
             func.count(models.Rating_Film.film_id).label("vote_count"),
         )
         .join(models.Rating_Film, models.Film.id == models.Rating_Film.film_id)
+        .filter(models.Film.status == True)
         .group_by(models.Film.id)
         .order_by(desc("avg_rating"), desc("vote_count"))
         .limit(8)
@@ -360,7 +369,7 @@ def get_favorite_films(
     favorite_films = (
         db.query(models.Film)
         .join(models.Favorite_Film, models.Film.id == models.Favorite_Film.film_id)
-        .filter(models.Favorite_Film.user_id == current_user.id)
+        .filter(and_(models.Favorite_Film.user_id == current_user.id, models.Film.status == True))
         .all()
     )
 
