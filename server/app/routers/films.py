@@ -207,12 +207,28 @@ async def get_latest_active_films(db: Session = Depends(get_db)):
         .limit(5)
         .all()
     )
-    film_details = []
-    for film in films:
-        film_detail = schemas.FilmDetailOut(
-            **film.__dict__, genre=schemas.GenreFilm(**film.genre.__dict__)
-        )
-        film_details.append(film_detail)
+    # film_details = []
+    # for film in films:
+    #     film_detail = schemas.FilmDetailOut(
+    #         **film.__dict__, genre=schemas.GenreFilm(**film.genre.__dict__)
+    #     )
+    #     film_details.append(film_detail)
+
+    film_details = [
+        {
+            "title": film.title,
+            "production_year": film.production_year,
+            "path": film.path,
+            "price": film.price,
+            "status": film.status,
+            "id": film.id,
+            "length": film.length,
+            "poster": film.poster,
+            "description": film.description,
+            "add_at": film.add_at,
+        }
+        for film in films
+    ]
     return film_details
 
 
