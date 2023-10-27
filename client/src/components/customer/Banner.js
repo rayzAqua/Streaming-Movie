@@ -21,6 +21,7 @@ function Banner() {
   const [favoriteFilm, setFavoriteFilm] = useState([]);
   useEffect(() => {
     getBannerFilm();
+    console.log(filmBanner);
   }, [param, load]);
   useEffect(() => {
     if (user != null) {
