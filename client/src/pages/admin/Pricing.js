@@ -108,11 +108,11 @@ function Pricing() {
       toast.error("Error name empty");
       return;
     }
-    if(price<=0){
+    if (price <= 0) {
       toast.error("Error price must be positive number");
       return;
     }
-    if(day<=0){
+    if (day <= 0) {
       toast.error("Error day must be positive number");
       return;
     }

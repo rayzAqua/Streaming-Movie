@@ -51,6 +51,8 @@ function AdminMovies() {
   const indexOfFirstFilms = indexOfLastFilms - filmsPerPage;
   const currentFilm = film.slice(indexOfFirstFilms, indexOfLastFilms);
 
+  const [loading, setLoading] = useState(false);
+
   const paginateFront = () => setCurrentPage(currentPage + 1);
   const paginateBack = () => setCurrentPage(currentPage - 1);
 
@@ -247,6 +249,7 @@ function AdminMovies() {
     formData.append("photo", filePhoto);
 
     try {
+      setLoading(true);
       const response = await axios.post(
         axios.defaults.baseURL + `/upload/photo`,
         formData,
@@ -263,11 +266,16 @@ function AdminMovies() {
         toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
       }
 
+      setLoading(false);
       // Sau khi hoàn thành, bạn có thể làm sạch trạng thái file
+      setFilePhoto(null);
     } catch (error) {
+      setLoading(false);
       toast.error("Đã xảy ra lỗi khi tải ảnh lên. Vui lòng thử lại.");
     }
   };
+
+  const [loadingVideo, setLoadingVideo] = useState(false);
 
   const handleFileVideoChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -285,6 +293,7 @@ function AdminMovies() {
     formData.append("video_file", fileVideo);
 
     try {
+      setLoadingVideo(true);
       const response = await axios.post(
         axios.defaults.baseURL + `/upload/video`,
         formData,
@@ -302,7 +311,10 @@ function AdminMovies() {
       }
 
       // Sau khi hoàn thành, bạn có thể làm sạch trạng thái file
+      setLoadingVideo(false);
+      setFileVideo(null);
     } catch (error) {
+      setLoadingVideo(false);
       toast.error("Đã xảy ra lỗi khi tải video lên. Vui lòng thử lại.");
     }
   };
@@ -323,15 +335,15 @@ function AdminMovies() {
       toast.error("Please upload video film or poster film");
       return;
     }
-    if(price<=0){
+    if (price <= 0) {
       toast.error("Error price must be positive number");
       return;
     }
-    if(productionYear<1900){
+    if (productionYear < 1900) {
       toast.error("Production year must over 1900");
       return;
     }
-    if(length<=0){
+    if (length <= 0) {
       toast.error("Film Length must be positive number");
       return;
     }
@@ -539,12 +551,23 @@ function AdminMovies() {
                           className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                         />
                         {filePhoto ? (
-                          <button
-                            type="button"
-                            onClick={(e) => handlePhotoUpload(e)}
-                          >
-                            Upload
-                          </button>
+                          <>
+                            <div class="flex items-center justify-center">
+                              {!loading ? (
+                                <button
+                                  className="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mt-5 mb-5"
+                                  type="button"
+                                  onClick={(e) => handlePhotoUpload(e)}
+                                >
+                                  Upload
+                                </button>
+                              ) : (
+                                <div className=" mt-3 px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">
+                                  Loading...
+                                </div>
+                              )}
+                            </div>
+                          </>
                         ) : (
                           <></>
                         )}
@@ -601,12 +624,23 @@ function AdminMovies() {
                           className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                         />
                         {fileVideo ? (
-                          <button
-                            type="button"
-                            onClick={(e) => handleVideoUpload(e)}
-                          >
-                            Upload
-                          </button>
+                          <>
+                            <div class="flex items-center justify-center">
+                              {!loadingVideo ? (
+                                <button
+                                  className="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mt-5 mb-5"
+                                  type="button"
+                                  onClick={(e) => handleVideoUpload(e)}
+                                >
+                                  Upload
+                                </button>
+                              ) : (
+                                <div className=" mt-3 px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">
+                                  Loading...
+                                </div>
+                              )}
+                            </div>
+                          </>
                         ) : (
                           <></>
                         )}
@@ -645,6 +679,9 @@ function AdminMovies() {
                     <button
                       className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1"
                       type="button"
+                      disabled={
+                        loading ? loading : loadingVideo ? loadingVideo : false
+                      }
                       onClick={handleClose}
                     >
                       Close
@@ -652,9 +689,16 @@ function AdminMovies() {
                     <button
                       className="text-white bg-green-500 active:bg-yellow-700 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1"
                       type="button"
+                      disabled={
+                        loading ? loading : loadingVideo ? loadingVideo : false
+                      }
                       onClick={handleSubmit}
                     >
-                      Submit
+                      {loading
+                        ? `Waiting For Upload`
+                        : loadingVideo
+                        ? `Waiting For Upload`
+                        : `Submit`}
                     </button>
                   </div>
                 </div>
