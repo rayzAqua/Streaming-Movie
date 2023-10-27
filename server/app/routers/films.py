@@ -198,7 +198,7 @@ async def get_active_films(db: Session = Depends(get_db)):
     return films
 
 
-@router.get("/getLatestActive", response_model=List[schemas.FilmDetailOut])
+@router.get("/getLatestActive")
 async def get_latest_active_films(db: Session = Depends(get_db)):
     films = (
         db.query(models.Film)
