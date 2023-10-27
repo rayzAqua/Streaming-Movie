@@ -198,21 +198,33 @@ async def get_active_films(db: Session = Depends(get_db)):
     return films
 
 
-@router.get("/getLatestActive", response_model=List[schemas.FilmDetailOut])
+@router.get("/getLatestActive")
 async def get_latest_active_films(db: Session = Depends(get_db)):
     films = (
-        db.query(models.Film)
+        db.query(models.Film, models.Genre.name.label("genre"))
+        .outerjoin(models.Genre, models.Genre.id == models.Film.genre_id)
         .filter(models.Film.status == True)
         .order_by(models.Film.add_at.desc())
         .limit(5)
         .all()
     )
-    film_details = []
-    for film in films:
-        film_detail = schemas.FilmDetailOut(
-            **film.__dict__, genre=schemas.GenreOut(**film.genre.__dict__)
-        )
-        film_details.append(film_detail)
+
+    film_details = [
+        {
+            "title": film.Film.title,
+            "production_year": film.Film.production_year,
+            "path": film.Film.path,
+            "price": film.Film.price,
+            "status": film.Film.status,
+            "id": film.Film.id,
+            "length": film.Film.length,
+            "poster": film.Film.poster,
+            "description": film.Film.description,
+            "genre": {"id": film.Film.genre_id, "name": film.genre},
+            "add_at": film.Film.add_at,
+        }
+        for film in films
+    ]
     return film_details
 
 
@@ -309,7 +321,8 @@ def get_top_favorite_films(db: Session = Depends(get_db)):
     return top_favorite_films
 
 
-@router.get("/topRatedFilms", response_model=list[dict])
+# @router.get("/topRatedFilms", response_model=list[dict])
+@router.get("/topRatedFilms")
 async def get_top_rated_films(db: Session = Depends(get_db)):
     top_rated_films = (
         db.query(
@@ -369,7 +382,12 @@ def get_favorite_films(
     favorite_films = (
         db.query(models.Film)
         .join(models.Favorite_Film, models.Film.id == models.Favorite_Film.film_id)
-        .filter(and_(models.Favorite_Film.user_id == current_user.id, models.Film.status == True))
+        .filter(
+            and_(
+                models.Favorite_Film.user_id == current_user.id,
+                models.Film.status == True,
+            )
+        )
         .all()
     )
 

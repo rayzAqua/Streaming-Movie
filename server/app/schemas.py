@@ -85,6 +85,10 @@ class GenreOut(Genre):
     id: int
 
 
+class GenreFilm(BaseModel):
+    name: str
+
+
 # film
 class FilmBase(BaseModel):
     title: str
@@ -94,7 +98,7 @@ class FilmBase(BaseModel):
     path: str
     description: Text
     price: int
-    genre_id: int
+    # genre_id: int
     status: bool
 
 
@@ -104,7 +108,7 @@ class FilmStatus(BaseModel):
 
 class FilmDetailOut(FilmBase):
     id: int
-    genre: GenreOut
+    genre: GenreFilm
     add_at: datetime
 
     class Config:
