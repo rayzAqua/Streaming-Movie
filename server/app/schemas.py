@@ -94,7 +94,7 @@ class FilmBase(BaseModel):
     path: str
     description: Text
     price: int
-    genre_id: int
+    # genre_id: int
     status: bool
 
 
