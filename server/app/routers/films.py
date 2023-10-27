@@ -210,7 +210,7 @@ async def get_latest_active_films(db: Session = Depends(get_db)):
     film_details = []
     for film in films:
         film_detail = schemas.FilmDetailOut(
-            **film.__dict__, genre=schemas.GenreOut(**film.genre.__dict__)
+            **film.__dict__, genre=schemas.GenreFilm(**film.genre.__dict__)
         )
         film_details.append(film_detail)
     return film_details
