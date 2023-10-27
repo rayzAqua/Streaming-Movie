@@ -309,7 +309,8 @@ def get_top_favorite_films(db: Session = Depends(get_db)):
     return top_favorite_films
 
 
-@router.get("/topRatedFilms", response_model=list[dict])
+# @router.get("/topRatedFilms", response_model=list[dict])
+@router.get("/topRatedFilms")
 async def get_top_rated_films(db: Session = Depends(get_db)):
     top_rated_films = (
         db.query(
@@ -369,7 +370,12 @@ def get_favorite_films(
     favorite_films = (
         db.query(models.Film)
         .join(models.Favorite_Film, models.Film.id == models.Favorite_Film.film_id)
-        .filter(and_(models.Favorite_Film.user_id == current_user.id, models.Film.status == True))
+        .filter(
+            and_(
+                models.Favorite_Film.user_id == current_user.id,
+                models.Film.status == True,
+            )
+        )
         .all()
     )
 
