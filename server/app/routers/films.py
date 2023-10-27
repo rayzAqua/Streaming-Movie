@@ -201,31 +201,27 @@ async def get_active_films(db: Session = Depends(get_db)):
 @router.get("/getLatestActive")
 async def get_latest_active_films(db: Session = Depends(get_db)):
     films = (
-        db.query(models.Film)
+        db.query(models.Film, models.Genre.name.label("genre"))
+        .outerjoin(models.Genre, models.Genre.id == models.Film.genre_id)
         .filter(models.Film.status == True)
         .order_by(models.Film.add_at.desc())
         .limit(5)
         .all()
     )
-    # film_details = []
-    # for film in films:
-    #     film_detail = schemas.FilmDetailOut(
-    #         **film.__dict__, genre=schemas.GenreFilm(**film.genre.__dict__)
-    #     )
-    #     film_details.append(film_detail)
 
     film_details = [
         {
-            "title": film.title,
-            "production_year": film.production_year,
-            "path": film.path,
-            "price": film.price,
-            "status": film.status,
-            "id": film.id,
-            "length": film.length,
-            "poster": film.poster,
-            "description": film.description,
-            "add_at": film.add_at,
+            "title": film.Film.title,
+            "production_year": film.Film.production_year,
+            "path": film.Film.path,
+            "price": film.Film.price,
+            "status": film.Film.status,
+            "id": film.Film.id,
+            "length": film.Film.length,
+            "poster": film.Film.poster,
+            "description": film.Film.description,
+            "genre": {"id": film.Film.genre_id, "name": film.genre},
+            "add_at": film.Film.add_at,
         }
         for film in films
     ]
