@@ -117,7 +117,8 @@ function Package() {
         {subPackages && subPackages.length > 0 ? (
           <div className="container px-6 py-8 mx-auto">
             {!userPayment ||
-              (userPayment.length === 0 && (
+              userPayment.length === 0 ||
+              (!userPayment[0].pricing_name && (
                 <>
                   <h1 className="text-2xl font-semibold text-center text-subMain capitalize lg:text-3xl">
                     Pricing Plan
@@ -143,8 +144,8 @@ function Package() {
               userPayment.length > 0 &&
               userPayment[0].pricing_name
             ) ? (
-              subPackages.map((pack) => (
-                <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-3">
+                {subPackages.map((pack) => (
                   <div
                     key={pack.id}
                     className="w-full p-8 space-y-8 text-center bg-blue-600 rounded-lg"
@@ -182,8 +183,8 @@ function Package() {
                       </button>
                     )}
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
               <div className="grid grid-cols-1 gap-8 mt-6 xl:mt-12 xl:gap-12 md:grid-cols-2 lg:grid-cols-3">
                 <div className="col-span-full w-5/12 p-8 space-y-8 text-center bg-green-600 rounded-lg mt-5 mx-auto mb-5">

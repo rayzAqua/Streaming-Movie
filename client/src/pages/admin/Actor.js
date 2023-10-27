@@ -80,6 +80,8 @@ function Actor() {
     setTitle("Add Actor");
   };
 
+  const [loading, setLoading] = useState(false);
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
@@ -95,6 +97,7 @@ function Actor() {
     formData.append("photo", file);
 
     try {
+      setLoading(true);
       const response = await axios.post(
         axios.defaults.baseURL + `/upload/photo`,
         formData,
@@ -111,14 +114,20 @@ function Actor() {
         toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
       }
 
+      setLoading(false);
       // Sau khi hoàn thành, bạn có thể làm sạch trạng thái file
+      setFile(null);
     } catch (error) {
+      setLoading(false);
       toast.error("Đã xảy ra lỗi khi tải ảnh lên. Vui lòng thử lại.");
     }
   };
 
   const handleSubmit = async (e) => {
-    if (!actor_name && !photo) {
+    console.log(photo);
+    console.log(!(actor_name && photo));
+
+    if (!(actor_name && photo)) {
       toast.error("Error Name or photo empty");
       return;
     }
@@ -263,9 +272,23 @@ function Actor() {
                           className="shadow bg-main appearance-none rounded w-full py-2 px-1 border border-border text-white"
                         />
                         {file ? (
-                          <button type="button" onClick={handlePhotoUpload}>
-                            Upload
-                          </button>
+                          <>
+                            <div class="flex items-center justify-center">
+                              {!loading ? (
+                                <button
+                                  className="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mt-5 mb-5"
+                                  type="button"
+                                  onClick={(e) => handlePhotoUpload(e)}
+                                >
+                                  Upload
+                                </button>
+                              ) : (
+                                <div className=" mt-3 px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">
+                                  Loading...
+                                </div>
+                              )}
+                            </div>
+                          </>
                         ) : (
                           <></>
                         )}
@@ -283,9 +306,10 @@ function Actor() {
                     <button
                       className="text-white bg-green-500 active:bg-yellow-700 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1"
                       type="button"
+                      disabled={loading}
                       onClick={handleSubmit}
                     >
-                      Submit
+                      {loading ? `Waiting For Upload` : `Submit`}
                     </button>
                   </div>
                 </div>
