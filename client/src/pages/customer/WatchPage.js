@@ -3,8 +3,7 @@ import Layout from "../../layout/Layout";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
 import { TbFileTime } from "react-icons/tb";
-import { FaCloudDownloadAlt, FaHeart, FaPlay } from "react-icons/fa";
-import ReactPlayer from "react-player";
+import { FaHeart, FaPlay } from "react-icons/fa";
 import axios from "../../api/axios";
 import axiosApiInstance from "../../context/intercepter";
 import { toast } from "react-toastify";
@@ -80,10 +79,6 @@ function WatchPage() {
     setLoadFavorite(true);
   }
 
-  useEffect(() => {
-    checkFilmFavorite();
-  }, [param, loadFavorite]);
-
   async function getMovie() {
     const result = await axios.get(
       axios.defaults.baseURL + `/films/getFilm/${id}`
@@ -91,6 +86,10 @@ function WatchPage() {
     setMovie(result?.data);
     setLoad(true);
   }
+
+  useEffect(() => {
+    checkFilmFavorite();
+  }, [param, loadFavorite]);
 
   useEffect(() => {
     getMovie();

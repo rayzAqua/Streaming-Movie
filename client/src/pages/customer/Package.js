@@ -1,6 +1,6 @@
 import React from "react";
 import Layout from "../../layout/Layout";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "../../api/axios";
 import { useEffect } from "react";
@@ -11,12 +11,9 @@ import axiosApiInstance from "../../context/intercepter";
 import { useRentMovieContext } from "../../context/RentMovieProvider";
 
 function Package() {
-  const param = useLocation();
-  const [load, setLoad] = useState(false);
   const [subPackages, setPackages] = useState([]);
   const { user } = useContext(AuthContext);
   const [rentData, setRentData] = useRentMovieContext();
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Get package
@@ -51,7 +48,7 @@ function Package() {
     };
 
     getPricing();
-  }, []);
+  }, [navigate]);
 
   const userPayment = JSON.parse(localStorage.getItem("payment"));
 
@@ -62,7 +59,6 @@ function Package() {
       const packagePrice = e.currentTarget.getAttribute("data-price");
 
       console.log(packageId);
-      setLoading(true);
       const res = await axiosApiInstance.post(
         `/payment/forPackage/${packageId}`
       );
@@ -87,7 +83,6 @@ function Package() {
         }
       }
     } catch (error) {
-      setLoading(false);
       if (error.response && error.response.status === 404) {
         toast.error(error.response.data.detail);
       } else if (error.response && error.response.status === 409) {

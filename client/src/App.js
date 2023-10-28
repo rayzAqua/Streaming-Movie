@@ -14,7 +14,6 @@ import Profile from "./pages/customer/Profile";
 import ChangePass from "./pages/customer/Change-Pass";
 import Favorite from "./pages/customer/Favorite";
 import UserFogotPass from "./pages/UserFogotPass";
-import Verify from "./pages/Verify";
 import UserChangePass from "./pages/UserChangePass";
 import DashBoard from "./pages/admin/DashBoard";
 import Genres from "./pages/admin/Genres";
@@ -66,7 +65,6 @@ function App() {
               <Route path="/movie/:id" element={<SingleMovie />} />
               <Route path="/forgot-pass" element={<UserFogotPass />} />
               <Route path="/change-pass" element={<UserChangePass />} />
-              <Route path="/verify-code" element={<Verify />} />
               <Route path="/payment" element={<Order />} />
             </>
           )}
