@@ -14,8 +14,12 @@ from .utils import UnicornException
 app = FastAPI(title="MOVIE STREAMING API")
 
 # Cấu hình CORS
+# origins = [
+#     "http://localhost:3000",  # Thay thế bằng địa chỉ của ứng dụng React của bạn
+# ]
+
 origins = [
-    "http://localhost:3000",  # Thay thế bằng địa chỉ của ứng dụng React của bạn
+    "https://streaming-movie.vercel.app",
 ]
 
 app.add_middleware(
