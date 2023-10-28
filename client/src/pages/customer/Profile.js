@@ -1,9 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SideBar from "../../components/nav/SideBar";
-import Uploader from "../../components/Uploader";
-import AuthContext from "../../context/AuthProvider";
 import axiosApiInstance from "../../context/intercepter";
-import axios from "../../api/axios";
 import { toast } from "react-toastify";
 
 function Profile() {
