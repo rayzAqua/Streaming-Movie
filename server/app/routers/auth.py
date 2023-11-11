@@ -39,6 +39,8 @@ mail = FastMail(conf)
 
 router = APIRouter(tags=["Authentication"])
 
+msg = utils.ErrorMessage()
+
 
 @router.post("/login")
 async def login(
@@ -56,18 +58,19 @@ async def login(
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Email does not exist.",
+                detail=msg.LOGIN_ERROR_EMAIL,
             )
         # Check password
         if not await utils.verify(user_credentials.password, user.password):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=f"Incorrect password."
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=msg.LOGIN_ERROR_PASSWORD,
             )
         # Check status
         if not user.status:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Your account is currently inactive. Please contact support.",
+                detail=msg.LOGIN_ERROR_LOCKED,
             )
         # Check verify
         if not user.verified:
@@ -80,12 +83,12 @@ async def login(
                 await sendVerifyEmail(dbSession=db, userData=user)
                 return {
                     "success": False,
-                    "msg": "An email was sent to you. Please check.",
+                    "msg": msg.VERIFY_WARNING_01,
                 }
             else:
                 return {
                     "success": False,
-                    "msg": "Your account was not verify. Please verify.",
+                    "msg": msg.VERIFY_WARNING_02,
                 }
 
         # CREATE A TOKEN
@@ -112,6 +115,7 @@ async def login(
                 "access_token": access_token,
                 "expiresIn": expire,
             },
+            "msg": msg.LOGIN_SUCCESS,
         }
 
     except HTTPException as e:
@@ -128,26 +132,26 @@ async def register(user: schemas.Register, db: Session = Depends(get_db)):
         )
         if check_user:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Email already register."
+                status_code=status.HTTP_409_CONFLICT,
+                detail=msg.REGISTER_ERROR_EMAIL,
             )
 
-        # Check len of pass
         if len(user.password) < 6:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Password is too short.",
+                detail=msg.REGISTER_ERROR_PASSWORD,
             )
         # Empty name validate
         if user.name == "":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Full Name is required.",
+                detail=msg.REGISTER_ERROR_FULLNAME_01,
             )
         # Lenght of name valiđate
         if len(user.name) > 32:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Full Name is too long.",
+                detail=msg.REGISTER_ERROR_FULLNAME_02,
             )
 
         # Tạo một bản ghi User mới với trạng thái verify (status = 2)
@@ -166,7 +170,7 @@ async def register(user: schemas.Register, db: Session = Depends(get_db)):
 
         return {
             "success": True,
-            "msg": "Register successfully. Please verify your email",
+            "msg": msg.REGISTER_SUCCESS,
         }
     except HTTPException as e:
         raise UnicornException(
@@ -186,7 +190,8 @@ async def verify(
             parts = user_token.split(".")
             if len(parts) != 3:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Token."
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=msg.VERIFY_ERROR_TOKEN,
                 )
             user_data = jwt.decode(
                 user_token, settings.secret_key, algorithms=settings.algorithm
@@ -385,7 +390,7 @@ async def verify(
         db.delete(isCorrectToken)
         db.commit()
 
-        return {"success": True, "msg": "Your account was verified."}
+        return {"success": True, "msg": msg.VERIFY_SUCCESS}
 
     except HTTPException as e:
         raise UnicornException(
@@ -404,11 +409,11 @@ async def resendEmail(
         )
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Email isn't existed."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.EMAIL_ERROR_01
             )
         if user.verified:
             raise HTTPException(
-                status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="User was verified."
+                status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=msg.VERIFY_WARNING_03
             )
 
         isExistedToken = (
@@ -424,7 +429,7 @@ async def resendEmail(
         # Send verify email
         await sendVerifyEmail(dbSession=db, userData=user)
 
-        return {"success": True, "msg": "A link had sent to your email."}
+        return {"success": True, "msg": msg.RESEND_EMAIL_SUCCESS}
 
     except HTTPException as e:
         raise UnicornException(
@@ -440,7 +445,7 @@ async def forgetPassword(email_user: schemas.EmailInput, db: Session = Depends(g
         )
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User is not existed."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.FORGET_ERROR_EMAIL
             )
 
         # Kiểm tra xem user này đã có mã chưa.
@@ -454,7 +459,7 @@ async def forgetPassword(email_user: schemas.EmailInput, db: Session = Depends(g
                 # Mã xác nhận chưa hết hạn, không gửi lại
                 return {
                     "success": False,
-                    "msg": f"An email has already been sent to your address. Please check it and verify.",
+                    "msg": msg.FORGET_EXISTED_CODE,
                 }
 
         # Nếu user chưa có mã thì gửi mã xác nhận email
@@ -462,7 +467,7 @@ async def forgetPassword(email_user: schemas.EmailInput, db: Session = Depends(g
 
         return {
             "success": True,
-            "msg": f"An email has been sent to your address. Please check it and verify.",
+            "msg": msg.FORGET_SUCCESS_01,
         }
 
     except HTTPException as e:
@@ -483,7 +488,7 @@ async def confirmCode(confirm_data: schemas.ConfirmCode, db: Session = Depends(g
         )
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User is not existed."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.FORGET_ERROR_EMAIL
             )
 
         # Xác nhận
@@ -500,7 +505,7 @@ async def confirmCode(confirm_data: schemas.ConfirmCode, db: Session = Depends(g
                     return {
                         "success": True,
                         "isCorrect": True,
-                        "msg": f"Confirmation code is correct. Proceed to change password.",
+                        "msg": msg.FORGET_SUCCESS_02,
                     }
                 # Nếu hết hạn thì gửi lại email.
                 else:
@@ -511,20 +516,20 @@ async def confirmCode(confirm_data: schemas.ConfirmCode, db: Session = Depends(g
                     return {
                         "success": False,
                         "isCorrect": False,
-                        "msg": f"Code is expired. An email has been sent to your address. Please check it and verify.",
+                        "msg": msg.FORGET_EXPIRED_CODE,
                     }
             # Nếu mã không đúng
             else:
                 return {
                     "success": False,
                     "isCorrect": False,
-                    "msg": f"Invalid code.",
+                    "msg": msg.FORGET_ERROR_CODE,
                 }
         else:
             return {
                 "success": False,
                 "isCorrect": False,
-                "msg": f"Invalid user confirmation data.",
+                "msg": msg.FORGET_ERROR_DATA_01,
             }
 
     except HTTPException as e:
@@ -544,13 +549,13 @@ async def change_pass(
 
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.FORGET_ERROR_EMAIL
             )
 
         if len(data.new_password) < 6:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Password is too short.",
+                detail=msg.FORGET_ERROR_PASSWORD,
             )
 
         if data.isCorrect:
@@ -561,12 +566,12 @@ async def change_pass(
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid Infomation.",
+                detail=msg.FORGET_ERROR_DATA_02,
             )
 
         return {
             "success": True,
-            "msg": "Change Password successfully. Please login again.",
+            "msg": msg.FORGET_SUCCESS_03,
         }
     except HTTPException as e:
         raise UnicornException(

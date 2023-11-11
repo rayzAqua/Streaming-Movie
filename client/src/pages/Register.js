@@ -7,6 +7,7 @@ import { useContext } from "react";
 import AuthContext from "../context/AuthProvider";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
+import { messageError } from "../api/utils";
 
 function Register() {
   const [name, setName] = useState("");
@@ -32,39 +33,50 @@ function Register() {
     setConfirmPwdShown(!confirmPwdShown);
   };
 
+  const isValidEmail = (email) => {
+    // Sử dụng biểu thức chính quy để kiểm tra định dạng email
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    return emailRegex.test(email);
+  };
+
   const handleClick = async (e) => {
     e.preventDefault();
 
     if (name === "") {
-      setNameMsgOut("(PLEASE INPUT YOUR NAME)");
+      setNameMsgOut(`(${messageError.ERROR_INPUT_04})`);
       return;
     } else {
       setNameMsgOut("");
     }
 
     if (email === "") {
-      setEmailMsgOut("(PLEASE INPUT YOUR EMAIL)");
+      setEmailMsgOut(`(${messageError.ERROR_INPUT_01})`);
       return;
     } else {
       setEmailMsgOut("");
     }
 
     if (password === "") {
-      setPassMsgOut("(PLEASE INPUT YOUR PASSWORD)");
+      setPassMsgOut(`(${messageError.ERROR_INPUT_02})`);
       return;
     } else {
       setPassMsgOut("");
     }
 
     if (confirmPassword === "") {
-      setConfirmPassMsgOut("(PLEASE CONFIRM YOUR PASSWORD)");
+      setConfirmPassMsgOut(`(${messageError.ERROR_INPUT_03})`);
       return;
     } else {
       setConfirmPassMsgOut("");
     }
 
+    if (!isValidEmail(email)) {
+      setEmailMsgOut(`(${messageError.ERROR_EMAIL_FORMAT})`);
+      return;
+    }
+
     if (password !== confirmPassword) {
-      toast.error("Password and confirm password are not match");
+      toast.error(messageError.ERROR_CONFIRM_PASSWORD);
       return;
     } else {
       setConfirmPassMsgOut("");

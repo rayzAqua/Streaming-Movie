@@ -4,6 +4,7 @@ import axios from "../api/axios";
 import { toast } from "react-toastify";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { messageError } from "../api/utils";
 
 function UserFogotPass() {
   const navigate = useNavigate();
@@ -60,15 +61,26 @@ function UserFogotPass() {
     }
   }, []);
 
+  const isValidEmail = (email) => {
+    // Sử dụng biểu thức chính quy để kiểm tra định dạng email
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    return emailRegex.test(email);
+  };
+
   // Handle find email
   const handleFindEmail = async (e) => {
     e.preventDefault();
 
     if (email === "") {
-      setEmailMsgOut("(PLEASE INPUT YOUR EMAIL)");
+      setEmailMsgOut(`(${messageError.ERROR_INPUT_01})`);
       return;
     } else {
       setEmailMsgOut("");
+    }
+
+    if (!isValidEmail(email)) {
+      setEmailMsgOut(`(${messageError.ERROR_EMAIL_FORMAT})`);
+      return;
     }
 
     setIsLoading(true);
@@ -113,7 +125,7 @@ function UserFogotPass() {
     e.preventDefault();
 
     if (code === "") {
-      setCodeMsgOut("(PLEASE INPUT CODE)");
+      setCodeMsgOut(`(${messageError.ERROR_INPUT_05})`);
       return;
     } else {
       setCodeMsgOut("");
@@ -176,21 +188,21 @@ function UserFogotPass() {
     e.preventDefault();
 
     if (password === "") {
-      setPassMsgOut("(PLEASE INPUT PASSWORD)");
+      setPassMsgOut(`(${messageError.ERROR_INPUT_02})`);
       return;
     } else {
       setPassMsgOut("");
     }
 
     if (confirmPassword === "") {
-      setConfirmPassMsgOut("(PLEASE CONFIRM PASSWORD)");
+      setConfirmPassMsgOut(`(${messageError.ERROR_INPUT_03})`);
       return;
     } else {
       setConfirmPassMsgOut("");
     }
 
     if (password != confirmPassword) {
-      toast.error("Password and confirm password doesn't match.");
+      toast.error(messageError.ERROR_CONFIRM_PASSWORD);
       return;
     }
 
