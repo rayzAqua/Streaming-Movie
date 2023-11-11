@@ -96,3 +96,45 @@ async def sendConfirmCodeEmail(email):
         subtype=MessageType.html,
     )
     await mail.send_message(message)
+
+
+class ErrorMessage:
+    # Auth - Login
+    LOGIN_ERROR_EMAIL = "Email does not exist."
+    LOGIN_ERROR_PASSWORD = "Incorrect password."
+    LOGIN_ERROR_LOCKED = "Your account is currently inactive. Please contact support."
+    LOGIN_SUCCESS = "Login successfully."
+
+    # Auth - Register
+    REGISTER_ERROR_EMAIL = "Email already register."
+    REGISTER_ERROR_PASSWORD = "Password is too short."
+    REGISTER_ERROR_FULLNAME_01 = "Full Name is required."
+    REGISTER_ERROR_FULLNAME_02 = "Full Name is too long."
+    REGISTER_SUCCESS = "Register successfully. Please verify your email."
+
+    # Auth - Forget Password
+    FORGET_ERROR_EMAIL = "User is not existed."
+    FORGET_ERROR_CODE = "Invalid code."
+    FORGET_ERROR_DATA_01 = "Invalid user confirmation data."
+    FORGET_ERROR_DATA_02 = "Invalid Infomation."
+    FORGET_ERROR_PASSWORD = "Password is too short."
+    FORGET_EXISTED_CODE = (
+        "An email has already been sent to your address. Please check it and verify."
+    )
+    FORGET_EXPIRED_CODE = "Code is expired. An email has been sent to your address. Please check it and verify."
+    FORGET_SUCCESS_01 = (
+        "An email has been sent to your address. Please check it and verify."
+    )
+    FORGET_SUCCESS_02 = "Confirmation code is correct. Proceed to change password."
+    FORGET_SUCCESS_03 = "Change Password successfully. Please login again."
+
+    # Verify
+    VERIFY_WARNING_01 = "An email was sent to you. Please check."
+    VERIFY_WARNING_02 = "Your account was not verify. Please verify."
+    VERIFY_WARNING_03 = "User was verified."
+    VERIFY_ERROR_TOKEN = "Invalid Token."
+    VERIFY_SUCCESS = "Your account was verified."
+
+    # Email
+    EMAIL_ERROR_01 = "Email isn't exist."
+    RESEND_EMAIL_SUCCESS = "A link had sent to your email."

@@ -29,7 +29,7 @@ export const AuthContextProvider = ({ children }) => {
 
       if (apiResponse && apiResponse.data.success) {
         localStorage.setItem("tokens", JSON.stringify(apiResponse.data.user));
-        toast.success("Login successfuly!");
+        toast.success(apiResponse.data.msg);
         window.location.href = "/";
       } else {
         toast.warning(apiResponse.data.msg);

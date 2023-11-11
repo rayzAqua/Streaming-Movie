@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "../api/axios"; // Import your axios instance here
 import AuthContext from "../context/AuthProvider";
+import { messageError } from "../api/utils";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -35,16 +36,16 @@ function LoginPage() {
 
     if (email === "" || password === "") {
       if (email === "") {
-        setEmailMsgOut("(PLEASE INPUT YOUR EMAIL)");
+        setEmailMsgOut(`(${messageError.ERROR_INPUT_01})`);
       }
       if (password === "") {
-        setpasswordMsgOut("(PLEASE INPUT YOUR PASSWORD)");
+        setpasswordMsgOut(`(${messageError.ERROR_INPUT_02})`);
       }
       return;
     }
 
     if (!isValidEmail(email)) {
-      setEmailMsgOut("(INVALID EMAIL FORMAT)");
+      setEmailMsgOut(`(${messageError.ERROR_EMAIL_FORMAT})`);
       return;
     }
 
@@ -59,7 +60,7 @@ function LoginPage() {
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      setLoginMsgOut("EMAIL OR PASSWORD IS INCORRECT");
+      // setLoginMsgOut("EMAIL OR PASSWORD IS INCORRECT");
     }
   };
   return (
