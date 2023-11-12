@@ -15,12 +15,14 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from .. import models, schemas
 from .. import vnpayClass
-from ..utils import UnicornException
+from ..utils import UnicornException, ErrorMessage
 from sqlalchemy.orm import Session
 from ..database import get_db
 
 
 router = APIRouter(prefix="/vnpay", tags=["Vnpay"])
+
+msg = ErrorMessage()
 
 
 def hmacsha512(key, data):
@@ -59,10 +61,10 @@ async def payment(
             if not payment:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Payment isn't existed.",
+                    detail=msg.PAYMENT_NOT_FOUND,
                 )
             if payment.status == 1:
-                return {"success": False, "msg": "Bill was payment."}
+                return {"success": False, "msg": msg.PAYMENT_ERROR_03}
 
             # Build URL Payment
             vnp = vnpayClass.vnpay()
@@ -95,13 +97,13 @@ async def payment(
             print(vnpay_payment_url)
             return {
                 "success": True,
-                "msg": "Valid input payment infomation",
+                "msg": msg.VNPAY_VALID_SUCCESS,
                 "url": vnpay_payment_url,
             }
         else:
             return {
                 "success": False,
-                "msg": "Form input not validate",
+                "msg": msg.VNPAY_VALID_ERROR,
             }
     except HTTPException as e:
         raise UnicornException(
@@ -239,7 +241,7 @@ def payment_return(
         else:
             return {
                 "success": True,
-                "msg": "Invalid signed.",
+                "msg": msg.VNPAY_INVALID_SIGN,
                 "payment": {
                     "order_id": order_id,
                     "amount": amount,

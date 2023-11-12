@@ -100,23 +100,23 @@ async def sendConfirmCodeEmail(email):
 
 class ErrorMessage:
     # Auth - Login
-    LOGIN_ERROR_EMAIL = "Email does not exist."
+    LOGIN_ERROR_EMAIL = "Email isn't existing."
     LOGIN_ERROR_PASSWORD = "Incorrect password."
     LOGIN_ERROR_LOCKED = "Your account is currently inactive. Please contact support."
     LOGIN_SUCCESS = "Login successfully."
 
     # Auth - Register
-    REGISTER_ERROR_EMAIL = "Email already register."
+    REGISTER_ERROR_EMAIL = "Email already registered."
     REGISTER_ERROR_PASSWORD = "Password is too short."
-    REGISTER_ERROR_FULLNAME_01 = "Full Name is required."
-    REGISTER_ERROR_FULLNAME_02 = "Full Name is too long."
+    REGISTER_ERROR_FULLNAME_01 = "Full name is required."
+    REGISTER_ERROR_FULLNAME_02 = "Full name is too long."
     REGISTER_SUCCESS = "Register successfully. Please verify your email."
 
     # Auth - Forget Password
-    FORGET_ERROR_EMAIL = "User is not existed."
+    FORGET_ERROR_EMAIL = "User isn't existing."
     FORGET_ERROR_CODE = "Invalid code."
     FORGET_ERROR_DATA_01 = "Invalid user confirmation data."
-    FORGET_ERROR_DATA_02 = "Invalid Infomation."
+    FORGET_ERROR_DATA_02 = "Invalid infomation."
     FORGET_ERROR_PASSWORD = "Password is too short."
     FORGET_EXISTED_CODE = (
         "An email has already been sent to your address. Please check it and verify."
@@ -126,15 +126,92 @@ class ErrorMessage:
         "An email has been sent to your address. Please check it and verify."
     )
     FORGET_SUCCESS_02 = "Confirmation code is correct. Proceed to change password."
-    FORGET_SUCCESS_03 = "Change Password successfully. Please login again."
+    FORGET_SUCCESS_03 = "Change password successfully. Please login again."
 
     # Verify
     VERIFY_WARNING_01 = "An email was sent to you. Please check."
     VERIFY_WARNING_02 = "Your account was not verify. Please verify."
     VERIFY_WARNING_03 = "User was verified."
-    VERIFY_ERROR_TOKEN = "Invalid Token."
+    VERIFY_ERROR_TOKEN = "Invalid token."
     VERIFY_SUCCESS = "Your account was verified."
 
     # Email
-    EMAIL_ERROR_01 = "Email isn't exist."
+    EMAIL_ERROR_01 = "Email isn't existing."
+    EMAIL_CONFLICT = "Email already existed."
     RESEND_EMAIL_SUCCESS = "A link had sent to your email."
+
+    # Actor
+    ACTOR_NOT_FOUND = "Actor issn't existing."
+    ACTOR_CREATE_SUCCESS = "Create actor successfully."
+    ACTOR_EDIT_SUCCESS = "Edit actor successfully."
+
+    # Film
+    FILM_NOT_FOUND = "Film not found."
+    FILM_CONFLICT = "Film conflict."
+    FILM_ACTOR_NOT_FOUND = "Film_Actor not found."
+    FILM_SUCCESS_01 = "Create successfully."
+    FILM_SUCCESS_02 = "Add actor to film successfully."
+    FILM_EDIT_SUCCESS_01 = "Edit film successfully."
+    FILM_EDIT_SUCCESS_02 = "Change film status successfully."
+
+    # Favorite
+    FAVORITE_NOT_FOUND = "Favorite film not found."
+    FAVORITE_ERROR_01 = "Film had been added to favorite lists."
+    FAVORITE_ERROR_02 = "User has no favorite films."
+    FAVORITE_SUCCESS = "Film add to favorite lists successfully."
+
+    # Timestamp
+    TIMESTAMP_ERROR_01 = "Film timestamp had been added."
+    TIMESTAMP_ERROR_02 = "Invalid timestamp value."
+    TIMESTAMP_ERROR_03 = "Timestamp isn't existing."
+    TIMESTAMP_SUCCESS = "Timestamp add to film successfully."
+    TIMESTAMP_EDIT_SUCCESS = "Change timestamp successfully."
+
+    # Rating
+    RATING_ERROR_01 = "Invalid rating value."
+    RATING_ERROR_02 = "Rating isn't existing."
+    RATING_SUCCESS = "Rating for film successfully."
+    RATING_EDIT_SUCCESS = "Change rating successfully."
+
+    # Genre
+    GENRE_NOT_FOUND = "Genre is not exist."
+    GENRE_EDIT_SUCCESS = "Edit Genre successfully."
+
+    # Payment
+    PAYMENT_NOT_FOUND = "Payment isn't existing."
+    PAYMENT_ERROR_01 = "Already registered."
+    PAYMENT_ERROR_02 = "Order isn't payment."
+    PAYMENT_ERROR_03 = "Already payment."
+    PAYMENT_CANCEL = "Order is cancel."
+    PAYMENT_CREATE_SUCCESS = "Order create successfully."
+    PAYMENT_SUCCESS = "Payment successfully."
+    PAYMENT_VALID_SUCCESS = "User has valid package."
+    PAYMENT_VALID_ERROR = "User didn't have any package."
+    PAYMENT_EDIT_SUCCESS = "Change order status successfully."
+    PAYMENT_DELETE_SUCCESS = "Delete order successfully."
+
+    # Pricing
+    PACKAGE_NOT_FOUND = "Package not found."
+    PACKAGE_CREATE_SUCCESS = "Create package successfully."
+    PACKAGE_GET_SUCCESS = "Get all active package successfully."
+    PACKAGE_EDIT_SUCCESS_01 = "Edit package successfully."
+    PACKAGE_EDIT_SUCCESS_02 = "Change package status successfully."
+
+    # Upload
+    UPLOAD_SUCCESS = "Upload successfully."
+    UPLOAD_ERROR = "Upload error."
+
+    # User
+    USER_NOT_FOUND = "User isn't existing."
+    USER_ERROR_NAME_01 = "Full name is required."
+    USER_ERROR_NAME_02 = "Full name is too long."
+    USER_ERROR_PASSWORD_01 = "Wrong current password."
+    USER_ERROR_PASSWORD_02 = "New password must be diffirent old password."
+    USER_CREATE_SUCCESS = "Create successfully."
+    USER_PROFILE_SUCCESS = "Edit profile successfully."
+    USER_PASSWORD_SUCCESS = "Change password successfully."
+
+    # Vnpay
+    VNPAY_VALID_SUCCESS = "Valid input payment infomation."
+    VNPAY_VALID_ERROR = "Form input not validate."
+    VNPAY_INVALID_SIGN = "Invalid signed."

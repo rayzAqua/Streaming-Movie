@@ -21,6 +21,8 @@ from .. import database, schemas, models, utils, oauth2
 
 router = APIRouter(prefix="/actors", tags=["Actors"])
 
+msg = utils.ErrorMessage()
+
 
 # POST
 @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -34,7 +36,7 @@ async def create_actor(
     db.commit()
     db.refresh(new_actor)
 
-    return {"msg": "Create success"}
+    return {"msg": msg.ACTOR_CREATE_SUCCESS}
 
 
 # GET
@@ -55,7 +57,7 @@ async def get_actor(
     actor = db.query(models.Actor).filter(models.Actor.id == actor_id).first()
     if not actor:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Actor does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.ACTOR_NOT_FOUND
         )
     return actor
 
@@ -65,7 +67,7 @@ def get_film_actors(film_id: int, db: Session = Depends(get_db)):
     film = db.query(models.Film).filter(models.Film.id == film_id).first()
 
     if not film:
-        raise HTTPException(status_code=404, detail="Film not found")
+        raise HTTPException(status_code=404, detail=msg.FILM_NOT_FOUND)
 
     actors = (
         db.query(models.Actor)
@@ -90,10 +92,10 @@ async def updateActor(
 
     if actor == None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Actor does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.ACTOR_NOT_FOUND
         )
 
     actor_query.update(editActor.dict(), synchronize_session=False)  # type: ignore
     db.commit()
 
-    return {"msg": "Edit actor success"}
+    return {"msg": msg.ACTOR_EDIT_SUCCESS}

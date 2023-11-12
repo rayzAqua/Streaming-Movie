@@ -12,6 +12,8 @@ from .. import database, schemas, models, utils, oauth2
 
 router = APIRouter(prefix="/genres", tags=["Genres"])
 
+msg = utils.ErrorMessage()
+
 
 # POST
 @router.post(
@@ -51,7 +53,7 @@ async def get_genre(genre_id: int, db: Session = Depends(get_db)):
     genre = db.query(models.Genre).filter(models.Genre.id == genre_id).first()
     if not genre:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Genre does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.GENRE_NOT_FOUND
         )
     return genre
 
@@ -69,10 +71,10 @@ async def update_genre(
 
     if genre == None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Genre does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.GENRE_NOT_FOUND
         )
 
     genre_query.update(edit_genre.dict(), synchronize_session=False)  # type: ignore
     db.commit()
 
-    return {"msg": "Edit Genre success"}
+    return {"msg": msg.GENRE_EDIT_SUCCESS}
