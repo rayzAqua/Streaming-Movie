@@ -58,7 +58,7 @@ const Order = () => {
               localStorage.removeItem("rentData");
               await getUserPayment();
               if (rentData.movie_title) {
-                window.location.href = `/movie/${rentData.movie_title}`;
+                window.location.href = `/watch/${rentData.movie_title}`;
               } else {
                 window.location.href = `/package`;
               }
