@@ -25,6 +25,8 @@ from .. import database, schemas, models, utils, oauth2
 
 router = APIRouter(prefix="/films", tags=["Films"])
 
+msg = utils.ErrorMessage()
+
 
 # POST
 @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -36,13 +38,13 @@ async def create_film(
     film_check = db.query(models.Film).filter(models.Film.title == film.title).first()
     if film_check:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Film title conflict"
+            status_code=status.HTTP_409_CONFLICT, detail=msg.FILM_CONFLICT
         )
     new_film = models.Film(**film.dict())
     db.add(new_film)
     db.commit()
     db.refresh(new_film)
-    return {"msg": "Create success"}
+    return {"msg": msg.FILM_SUCCESS_01}
 
 
 @router.post("/addActors/{film_id}/{actor_id}", status_code=status.HTTP_201_CREATED)
@@ -56,14 +58,14 @@ def add_actor_to_film(
 
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
 
     actor = db.query(models.Actor).get(actor_id)
     if not actor:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Actor with id {actor_id} not found",
+            detail=msg.ACTOR_NOT_FOUND,
         )
 
     film_actor = models.Film_Actor(film_id=film_id, actor_id=actor_id)
@@ -72,7 +74,7 @@ def add_actor_to_film(
     db.commit()
     db.refresh(film)
 
-    return {"msg": "Add actor to film success"}
+    return {"msg": msg.FILM_SUCCESS_02}
 
 
 @router.post("/addFavoriteFilm/{film_id}", status_code=status.HTTP_201_CREATED)
@@ -84,7 +86,7 @@ def add_favorite_film(
     film = db.query(models.Film).get(film_id)
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
     checkFavorite = (
         db.query(models.Favorite_Film)
@@ -96,14 +98,14 @@ def add_favorite_film(
     )
     if checkFavorite:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Film had been added"
+            status_code=status.HTTP_409_CONFLICT, detail=msg.FAVORITE_ERROR_01
         )
 
     favorite_film = models.Favorite_Film(user_id=current_user.id, film_id=film_id)
     db.add(favorite_film)
     db.commit()
 
-    return {"msg": "Film added to favorites"}
+    return {"msg": msg.FAVORITE_SUCCESS}
 
 
 @router.post("/addTimeStamp/{film_id}", status_code=status.HTTP_201_CREATED)
@@ -116,7 +118,7 @@ def add_time_film(
     film = db.query(models.Film).get(film_id)
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
     checkTime = (
         db.query(models.Stamping_Film)
@@ -128,12 +130,12 @@ def add_time_film(
     )
     if checkTime:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Film had been added"
+            status_code=status.HTTP_409_CONFLICT, detail=msg.TIMESTAMP_ERROR_01
         )
 
     if time < 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid timestamp value"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=msg.TIMESTAMP_ERROR_02
         )
 
     time_stamp = models.Stamping_Film(
@@ -142,7 +144,7 @@ def add_time_film(
     db.add(time_stamp)
     db.commit()
 
-    return {"msg": "TimeStamp added to favorites"}
+    return {"msg": msg.TIMESTAMP_SUCCESS}
 
 
 @router.post("/addVote/{film_id}", status_code=status.HTTP_201_CREATED)
@@ -155,20 +157,20 @@ def vote_film(
     film = db.query(models.Film).get(film_id)
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
 
     # Assuming vote should be between 1 and 5
     if vote < 1 or vote > 5:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid vote value"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=msg.RATING_ERROR_01
         )
 
     film_vote = models.Rating_Film(user_id=current_user.id, film_id=film_id, rate=vote)
     db.add(film_vote)
     db.commit()
 
-    return {"msg": "Film voted successfully"}
+    return {"msg": msg.RATING_SUCCESS}
 
 
 # END POST
@@ -237,7 +239,7 @@ async def get_film(
     film = db.query(models.Film).filter(models.Film.id == film_id).first()
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
     return film
 
@@ -252,7 +254,7 @@ async def get_film(film_title: str, db: Session = Depends(get_db)):
     )
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
     return film
 
@@ -321,7 +323,6 @@ def get_top_favorite_films(db: Session = Depends(get_db)):
     return top_favorite_films
 
 
-# @router.get("/topRatedFilms", response_model=list[dict])
 @router.get("/topRatedFilms")
 async def get_top_rated_films(db: Session = Depends(get_db)):
     top_rated_films = (
@@ -393,7 +394,7 @@ def get_favorite_films(
 
     if not favorite_films:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User has no favorite films"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FAVORITE_ERROR_02
         )
     return favorite_films
 
@@ -455,19 +456,19 @@ async def update_film(
         )
         if (film_check) and (film_check.id != film_id):
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Film title conflict"
+                status_code=status.HTTP_409_CONFLICT, detail=msg.FILM_CONFLICT
             )
         film_query = db.query(models.Film).filter(models.Film.id == film_id)
         film = film_query.first()
 
         if film == None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Film does not exist"
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
             )
 
         film_query.update(edit_film.dict(), synchronize_session=False)  # type: ignore
         db.commit()
-        return {"msg": "Edit film success"}
+        return {"msg": msg.FILM_EDIT_SUCCESS_01}
     except Exception as e:
         error_detail = str(e)
         raise HTTPException(
@@ -486,7 +487,7 @@ async def update_film_status(
 
     if film is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
 
     new_status = not film.status
@@ -494,7 +495,7 @@ async def update_film_status(
 
     film_query.update(edit_film, synchronize_session=False)
     db.commit()
-    return {"msg": "Change film status success"}
+    return {"msg": msg.FILM_EDIT_SUCCESS_02}
 
 
 @router.put("/editVote/{film_id}", status_code=status.HTTP_200_OK)
@@ -511,20 +512,20 @@ def edit_vote_film(
     voteFilm = voteFilm_query.first()
     if voteFilm is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Vote does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.RATING_ERROR_02
         )
 
     # Assuming vote should be between 1 and 5
     if vote < 1 or vote > 5:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid vote value"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=msg.RATING_ERROR_01
         )
 
     editVote = {"rate": vote}
     voteFilm_query.update(editVote, synchronize_session=False)
     db.commit()
 
-    return {"msg": "Change vote successfully"}
+    return {"msg": msg.RATING_EDIT_SUCCESS}
 
 
 @router.put("/editTimeStamp/{film_id}", status_code=status.HTTP_200_OK)
@@ -541,20 +542,20 @@ def edit_time(
     timeStamp = timeStamp_query.first()
     if timeStamp is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="TimeStamp does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.TIMESTAMP_ERROR_03
         )
 
     # Assuming vote should be between 1 and 5
     if time < 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid value"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=msg.TIMESTAMP_ERROR_02
         )
 
     editTime = {"time_stamping": time}
     timeStamp_query.update(editTime, synchronize_session=False)
     db.commit()
 
-    return {"msg": "Change time successfully"}
+    return {"msg": msg.TIMESTAMP_EDIT_SUCCESS}
 
 
 # END PUT
@@ -574,13 +575,13 @@ def delete_actor(
 
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
 
     actor = db.query(models.Actor).get(actor_id)
     if not actor:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Actor not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.ACTOR_NOT_FOUND
         )
 
     # Assuming you have a relationship between films and actors
@@ -590,7 +591,7 @@ def delete_actor(
     film_actor = film_actor_query.first()
     if not film_actor:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film_Actor not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_ACTOR_NOT_FOUND
         )
 
     film_actor_query.delete(synchronize_session=False)
@@ -610,7 +611,7 @@ def delete_favorite_film(
 
     if not film:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Film not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
         )
 
     # Assuming you have a relationship between films and actors
@@ -621,7 +622,7 @@ def delete_favorite_film(
     favorite = favorite_query.first()
     if not favorite:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Favorite not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.FAVORITE_NOT_FOUND
         )
 
     favorite_query.delete(synchronize_session=False)

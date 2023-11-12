@@ -29,6 +29,8 @@ from .. import database, schemas, models, utils, oauth2
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
+msg = utils.ErrorMessage()
+
 # config Firebase
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(
@@ -56,9 +58,9 @@ async def uploadPhoto(photo: UploadFile = File(...)):
         blob.make_public()
         picture_url = blob.public_url
 
-        return {"message": "Upload success", "picture_url": picture_url}
+        return {"message": msg.UPLOAD_SUCCESS, "picture_url": picture_url}
     except Exception as e:
-        response = Response(content={"message": "Upload error", "error": str(e)})
+        response = Response(content={"message": msg.UPLOAD_ERROR, "error": str(e)})
         response.status_code = status.HTTP_404_NOT_FOUND
         return response
 
@@ -73,9 +75,9 @@ async def upload_video(video_file: UploadFile = File(...)):
         public_id = upload_result.get("public_id")
         secure_url = upload_result.get("secure_url")
         return {
-            "message": "Upload success",
+            "message": msg.UPLOAD_SUCCESS,
             "public_id": public_id,
             "secure_url": secure_url,
         }
     except Exception as e:
-        return JSONResponse(content={"message": "Upload error", "error": str(e)})
+        return JSONResponse(content={"message": msg.UPLOAD_ERROR, "error": str(e)})

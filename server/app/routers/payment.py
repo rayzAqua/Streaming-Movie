@@ -25,6 +25,8 @@ from .. import database, schemas, models, utils, oauth2
 
 router = APIRouter(prefix="/payment", tags=["Payment"])
 
+msg = utils.ErrorMessage()
+
 
 # POST
 @router.post("/forFilm/{film_id}")
@@ -38,11 +40,11 @@ async def add_payment_for_film(
         film = db.query(models.Film).get(film_id)
         if not film:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Film not found."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
             )
         if not film.status:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Film not found."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.FILM_NOT_FOUND
             )
 
         pay = film.price * days
@@ -74,7 +76,7 @@ async def add_payment_for_film(
 
         return {
             "success": True,
-            "msg": "Payment added successfully",
+            "msg": msg.PAYMENT_CREATE_SUCCESS,
             "payment": payment_data,
         }
     except HTTPException as e:
@@ -104,17 +106,17 @@ async def add_payment_for_package(
         )
         if payment:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Already Register."
+                status_code=status.HTTP_409_CONFLICT, detail=msg.PAYMENT_ERROR_01
             )
 
         package = db.query(models.Pricing).get(pricing_id)
         if not package:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Package not found."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.PACKAGE_NOT_FOUND
             )
         if not package.status:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Package not found."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.PACKAGE_NOT_FOUND
             )
 
         pay = package.price
@@ -149,7 +151,7 @@ async def add_payment_for_package(
 
         return {
             "success": True,
-            "msg": "Payment added successfully",
+            "msg": msg.PAYMENT_CREATE_SUCCESS,
             "payment": payment_data,
         }
     except HTTPException as e:
@@ -242,7 +244,7 @@ async def get_newest_payment(
                     }
                     return {
                         "success": True,
-                        "msg": "User has valid package.",
+                        "msg": msg.PAYMENT_VALID_SUCCESS,
                         "package": [result_dict],
                     }
 
@@ -260,13 +262,13 @@ async def get_newest_payment(
 
             return {
                 "success": True,
-                "msg": "User has valid payment.",
+                "msg": msg.PAYMENT_VALID_SUCCESS,
                 "package": result_dict,
             }
         else:
             return {
                 "success": False,
-                "msg": "User didn't have any package.",
+                "msg": msg.PAYMENT_VALID_ERROR,
                 "package": [],
             }
 
@@ -293,12 +295,12 @@ async def getActivePayment(
         payment = query.first()
 
         if not payment:
-            return {"success": False, "isCancel": True, "msg": "Order is cancel."}
+            return {"success": False, "isCancel": True, "msg": msg.PAYMENT_CANCEL}
 
         if payment.status == 0:
-            return {"success": False, "msg": "Order isn't payment."}
+            return {"success": False, "msg": msg.PAYMENT_ERROR_02}
 
-        return {"success": True, "msg": "Payment successfully."}
+        return {"success": True, "msg": msg.PAYMENT_SUCCESS}
 
     except HTTPException as e:
         raise UnicornException(
@@ -311,7 +313,7 @@ async def getActivePayment(
 
 # PUT
 @router.put("/edit/status/{payment_id}")
-async def update_film_status(
+async def update_payment_status(
     payment_id: int,
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
@@ -321,7 +323,7 @@ async def update_film_status(
 
     if payment is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Payment does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.PAYMENT_NOT_FOUND
         )
 
     if payment.status == 0:
@@ -334,7 +336,7 @@ async def update_film_status(
 
     payment_query.update(edit_payment, synchronize_session=False)
     db.commit()
-    return {"msg": "Change film status success"}
+    return {"msg": msg.PAYMENT_EDIT_SUCCESS}
 
 
 # END PUT
@@ -359,15 +361,15 @@ async def cancelPayment(
 
         if not payment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Bill isn't existing."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.PAYMENT_NOT_FOUND
             )
         if payment.status == 1:
-            return {"success": False, "msg": "Already payment."}
+            return {"success": False, "msg": msg.PAYMENT_ERROR_03}
 
         db.delete(payment)
         db.commit()
 
-        return {"success": True, "msg": "Delete bill successfully."}
+        return {"success": True, "msg": msg.PAYMENT_DELETE_SUCCESS}
 
     except HTTPException as e:
         raise UnicornException(

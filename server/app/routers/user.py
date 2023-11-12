@@ -12,6 +12,8 @@ from ..utils import UnicornException
 
 router = APIRouter(prefix="/user", tags=["User"])
 
+msg = utils.ErrorMessage()
+
 
 # POST
 @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -19,16 +21,21 @@ async def create_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
 ):
+    if len(user.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=msg.REGISTER_ERROR_PASSWORD,
+        )
     # Empty name validate
     if user.name == "":
-        return {"detail": "Full Name is required."}
+        return {"msg": msg.USER_ERROR_NAME_01}
     # Lenght of name valiđate
     if len(user.name) > 32:
-        return {"detail": "Full Name is too long."}
+        return {"msg": msg.USER_ERROR_NAME_02}
     check_user = db.query(models.User).filter(models.User.email == user.email).first()
     if check_user:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Email already exists"
+            status_code=status.HTTP_409_CONFLICT, detail=msg.EMAIL_CONFLICT
         )
     hashed_password = await utils.hash(user.password)
     user.password = hashed_password
@@ -36,7 +43,7 @@ async def create_user(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return {"msg": "Create success"}
+    return {"msg": msg.USER_CREATE_SUCCESS}
 
 
 # GET
@@ -57,7 +64,7 @@ async def get_user(
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.USER_NOT_FOUND
         )
     return user
 
@@ -89,7 +96,7 @@ async def get_profile(
     user = db.query(models.User).filter(models.User.id == current_user.id).first()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.USER_NOT_FOUND
         )
     return user
 
@@ -110,12 +117,12 @@ async def update_profile(
 
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.USER_NOT_FOUND
             )
 
         if len(edit_user.name) > 32:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Name is too long"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=msg.USER_ERROR_NAME_02
             )
 
         update_data = {"name": edit_user.name}
@@ -124,7 +131,7 @@ async def update_profile(
 
         update_user = user_query.first()
 
-        return {"success": True, "msg": "Edit profile success", "update": update_user}
+        return {"success": True, "msg": msg.USER_PROFILE_SUCCESS, "update": update_user}
     except HTTPException as e:
         raise UnicornException(
             status_code=e.status_code, detail=e.detail, success=False
@@ -143,23 +150,23 @@ async def change_pass(
 
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"User does not exist"
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.USER_NOT_FOUND
             )
 
         if not await utils.verify(edit_user.curr_pass, user.password):
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Wrong current password"
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.USER_ERROR_PASSWORD_01
             )
 
         if len(edit_user.password) < 6:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail=f"Password is too short"
+                status_code=status.HTTP_409_CONFLICT, detail=msg.REGISTER_ERROR_PASSWORD
             )
 
         if edit_user.curr_pass == edit_user.password:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"New password must be diffirent old password",
+                detail=msg.USER_ERROR_PASSWORD_02,
             )
 
         hashed_password = await utils.hash(edit_user.password)
@@ -167,7 +174,7 @@ async def change_pass(
         user_query.update(update_data, synchronize_session=False)  # type: ignore
         db.commit()
 
-        return {"success": True, "msg": "Change password success"}
+        return {"success": True, "msg": msg.USER_PASSWORD_SUCCESS}
     except HTTPException as e:
         raise UnicornException(
             status_code=e.status_code, detail=e.detail, success=False

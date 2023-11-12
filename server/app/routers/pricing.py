@@ -22,6 +22,8 @@ from ..utils import UnicornException
 
 router = APIRouter(prefix="/pricing", tags=["Pricing"])
 
+msg = utils.ErrorMessage()
+
 
 # POST
 @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -34,7 +36,7 @@ async def create_pricing(
     db.add(new_pricing)
     db.commit()
     db.refresh(new_pricing)
-    return {"msg": "Create success"}
+    return {"msg": msg.PACKAGE_CREATE_SUCCESS}
 
 
 # END POST
@@ -54,7 +56,7 @@ async def get_active_Pricing(db: Session = Depends(get_db)):
 
         if not packages:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Not found."
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.PACKAGE_NOT_FOUND
             )
 
         package_data = [
@@ -70,7 +72,7 @@ async def get_active_Pricing(db: Session = Depends(get_db)):
 
         return {
             "success": True,
-            "msg": "Get all active package successfully",
+            "msg": msg.PACKAGE_GET_SUCCESS,
             "packages": package_data,
         }
 
@@ -89,7 +91,7 @@ async def get_pricing(
     pricing = db.query(models.Pricing).filter(models.Pricing.id == id).first()
     if not pricing:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Pricing does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.PACKAGE_NOT_FOUND
         )
     return pricing
 
@@ -111,12 +113,12 @@ async def update_price(
 
         if pricing == None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Pricing does not exist"
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.PACKAGE_NOT_FOUND
             )
 
         pricing_query.update(edit_pricing.dict(), synchronize_session=False)  # type: ignore
         db.commit()
-        return {"msg": "Edit pricing success"}
+        return {"msg": msg.PACKAGE_EDIT_SUCCESS_01}
     except Exception as e:
         error_detail = str(e)
         raise HTTPException(
@@ -135,7 +137,7 @@ async def update_pricing_status(
 
     if pricing is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Pricing does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail=msg.PACKAGE_NOT_FOUND
         )
 
     new_status = not pricing.status
@@ -143,7 +145,7 @@ async def update_pricing_status(
 
     pricing_query.update(edit_pricing, synchronize_session=False)
     db.commit()
-    return {"msg": "Change pricing status success"}
+    return {"msg": msg.PACKAGE_EDIT_SUCCESS_02}
 
 
 # END PUT
