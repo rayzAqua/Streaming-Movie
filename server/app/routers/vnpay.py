@@ -189,7 +189,7 @@ def payment_return(
                             <html>
                                 <body>
                                     <h1>Payment Information Error</h1>
-                                    <p>Payment information isn't correct.</p>
+                                    <p>Payment information isn't correct or canceled.</p>
                                 </body>
                             </html>
                         """

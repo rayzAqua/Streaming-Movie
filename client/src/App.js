@@ -1,6 +1,6 @@
 import React from "react";
 import Aos from "aos";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import Home from "./pages/customer/Home";
 import About from "./pages/customer/About";
 import Contact from "./pages/customer/Contact";
@@ -32,6 +32,19 @@ import Order from "./pages/customer/Order";
 function App() {
   const tokens = JSON.parse(localStorage.getItem("tokens"));
   const permission = tokens ? jwtDecode(tokens.access_token).role : null;
+
+  const ProtectedRoute = ({ children }) => {
+    const { id } = useParams();
+    const payment = JSON.parse(localStorage.getItem("payment"));
+
+    if (!payment || !payment.some((item) => item.film_name === id)) {
+      console.log("Not in payment");
+      return <Navigate to={`/movie/${id}`} />;
+    }
+
+    return children;
+  };
+
   Aos.init();
   return (
     <AuthContextProvider>
@@ -54,7 +67,14 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/password" element={<ChangePass />} />
               <Route path="/favorite" element={<Favorite />} />
-              <Route path="/watch/:id" element={<WatchPage />} />
+              <Route
+                path="/watch/:id"
+                element={
+                  <ProtectedRoute>
+                    <WatchPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/" element={<Home />} />
               <Route path="/package" element={<Package />} />
               <Route path="/about" element={<About />} />
