@@ -37,7 +37,12 @@ function App() {
     const { id } = useParams();
     const payment = JSON.parse(localStorage.getItem("payment"));
 
-    if (!payment || !payment.some((item) => item.film_name === id)) {
+    const notInPayment =
+      !payment ||
+      (payment.length > 1 && !payment.some((item) => item.film_name === id)) ||
+      (payment.length === 1 && !payment[0].pricing_name);
+
+    if (notInPayment) {
       console.log("Not in payment");
       return <Navigate to={`/movie/${id}`} />;
     }
