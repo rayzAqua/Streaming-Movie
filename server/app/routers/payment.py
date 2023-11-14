@@ -37,6 +37,23 @@ async def add_payment_for_film(
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
     try:
+        # Check already register
+        payment = (
+            db.query(models.Payment)
+            .filter(
+                and_(
+                    models.Payment.user_id == current_user.id,
+                    models.Payment.pricing_id == None,
+                    models.Payment.end_date >= datetime.now(),
+                )
+            )
+            .first()
+        )
+        if payment:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail=msg.PAYMENT_ERROR_01
+            )
+
         film = db.query(models.Film).get(film_id)
         if not film:
             raise HTTPException(
