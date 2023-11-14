@@ -390,12 +390,14 @@ async def deleteNotPaidPayment(
             )
         )
 
-        payment = query.all()
+        payments = query.all()
 
-        if len(payment) == 0:
+        if len(payments) == 0:
             return {"success": True, "msg": msg.PAYMENT_NOT_FOUND}
 
-        db.delete(payment)
+        for payment in payments:
+            db.delete(payment)
+
         db.commit()
 
         return {"success": True, "msg": msg.PAYMENT_DELETE_SUCCESS}
