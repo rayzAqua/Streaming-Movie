@@ -375,3 +375,37 @@ async def cancelPayment(
         raise UnicornException(
             status_code=e.status_code, detail=e.detail, success=False
         )
+
+
+@router.delete("/deleteNotPaid")
+async def deleteNotPaidPayment(
+    payment_id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    try:
+        query = db.query(models.Payment).filter(
+            and_(
+                models.Payment.status == 0,
+                models.Payment.user_id == current_user.id,
+            )
+        )
+
+        payment = query.all()
+
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=msg.PAYMENT_NOT_FOUND
+            )
+        if payment.status == 1:
+            return {"success": False, "msg": msg.PAYMENT_ERROR_03}
+
+        db.delete(payment)
+        db.commit()
+
+        return {"success": True, "msg": msg.PAYMENT_DELETE_SUCCESS}
+
+    except HTTPException as e:
+        raise UnicornException(
+            status_code=e.status_code, detail=e.detail, success=False
+        )
