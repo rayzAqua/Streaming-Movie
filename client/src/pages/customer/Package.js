@@ -88,8 +88,7 @@ function Package() {
       } else if (error.response && error.response.status === 409) {
         console.log(error.response.data.detail);
         const res = await axiosApiInstance.delete(
-          `${axios.defaults.baseURL}/payment/deleteNotPaid`,
-          paymentData
+          `${axios.defaults.baseURL}/payment/deleteNotPaid`
         );
         if (res && res.data.success) {
           console.log(res.data.msgl);
