@@ -53,10 +53,10 @@ function Package() {
   const userPayment = JSON.parse(localStorage.getItem("payment"));
 
   const handleBtn = async (e) => {
-    const packageId = e.currentTarget.getAttribute("data-id");
-    const packageName = e.currentTarget.getAttribute("data-name");
-    const packagePrice = e.currentTarget.getAttribute("data-price");
     try {
+      const packageId = e.currentTarget.getAttribute("data-id");
+      const packageName = e.currentTarget.getAttribute("data-name");
+      const packagePrice = e.currentTarget.getAttribute("data-price");
       console.log(packageId);
       const res = await axiosApiInstance.post(
         `/payment/forPackage/${packageId}`
@@ -91,30 +91,6 @@ function Package() {
         );
         if (res && res.data.success) {
           console.log(res.data.msg);
-          console.log(packageId);
-          const res1 = await axiosApiInstance.post(
-            `/payment/forPackage/${packageId}`
-          );
-          if (res1 && res1.data.success) {
-            console.log(res1.data.msg);
-            console.log(res1.data.payment);
-
-            if (res1.data.payment) {
-              const paymentData = {
-                package_name: packageName,
-                total: packagePrice,
-                order_id: res1.data.payment.id,
-                customer: res1.data.payment.customer,
-                email: res1.data.payment.email,
-                hasData: true,
-                movie_title: null,
-              };
-              localStorage.setItem("rentData", JSON.stringify(paymentData));
-              setRentData(paymentData);
-              toast.success(res1.data.msg);
-              navigate("/payment");
-            }
-          }
         } else {
           console.log(res.data.msg);
         }
