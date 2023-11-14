@@ -75,7 +75,15 @@ function SingleMovie() {
       }
     } catch (error) {
       if (error.response && error.response.status === 409) {
-        toast.error(error.response.data.detail);
+        console.log(error.response.data.detail);
+        const res = await axiosApiInstance.delete(
+          `${axios.defaults.baseURL}/payment/deleteNotPaid`
+        );
+        if (res && res.data.success) {
+          console.log(res.data.msg);
+        } else {
+          console.log(res.data.msg);
+        }
       } else if (error.response && error.response.status === 422) {
         toast.error(error.response.data.detail[0].msg);
       } else if (error.response && error.response.status === 500) {
