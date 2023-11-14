@@ -392,12 +392,10 @@ async def deleteNotPaidPayment(
 
         payment = query.all()
 
-        if not payment:
+        if payment.lenght == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=msg.PAYMENT_NOT_FOUND
             )
-        if payment.status == 1:
-            return {"success": False, "msg": msg.PAYMENT_ERROR_03}
 
         db.delete(payment)
         db.commit()
