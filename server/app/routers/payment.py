@@ -379,7 +379,6 @@ async def cancelPayment(
 
 @router.delete("/deleteNotPaid")
 async def deleteNotPaidPayment(
-    payment_id: int,
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
